@@ -181,7 +181,7 @@ $gymPhone = setting('gym_phone', '+252 61 / 063 CAATO GYM');
         <div class="pvc-meta">
           <div><small>Plan Tier</small><strong><?= e($c['plan_name'] ?: 'Member') ?></strong></div>
           <div><small>Valid Until</small><strong><?= fmt_date($c['end_date']) ?></strong></div>
-          <div><small>Home Node</small><strong><?= e(str_replace('CAATO FITNESS GYM – ', '', $c['reg_branch'])) ?></strong></div>
+          <div><small>Home Node</small><strong><?= e(short_branch($c['reg_branch'])) ?></strong></div>
           <div><small>Phone</small><strong><?= e($c['phone']) ?></strong></div>
         </div>
       </div>

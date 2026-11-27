@@ -36,6 +36,11 @@ function money($v): string { return setting('currency', '$') . number_format((fl
 function fmt_date($d): string { return $d ? date('d M Y', strtotime($d)) : '—'; }
 function fmt_dt($d): string { return $d ? date('d M Y, H:i', strtotime($d)) : '—'; }
 function normalize_phone(string $p): string { return preg_replace('/\D+/', '', $p); }
+function short_branch(?string $name): string
+{
+    $s = preg_replace('/^CAATO\s+FITNESS\s+GYM\s*[^A-Za-z0-9]+/iu', '', (string) $name);
+    return trim($s) !== '' ? trim($s) : (string) $name;
+}
 
 function audit(string $action, string $entity = '', $id = null, string $details = ''): void
 {
@@ -133,11 +138,18 @@ function scope_branch(string $col, $requested = null): array
 /** Renders the signature CAATO 2026 Cyber Hero Banner for any page section */
 function page_banner(string $badge, string $title, string $accent, string $subtitle, string $actionsHtml = '', array $metrics = []): void
 {
+    $u = Auth::user();
+    $roleBadgeExtra = '';
+    if ($u && !Auth::isSuper() && !empty($u['branch_name'])) {
+        $bShort = short_branch($u['branch_name']);
+        $bCode  = $u['branch_code'] ?? 'BR';
+        $roleBadgeExtra = ' <span class="ms-1 px-2 py-0 rounded-pill" style="background:rgba(16,185,129,0.22);border:1px solid rgba(16,185,129,0.45);color:#6ee7b7;font-size:0.68rem"><i class="bi bi-geo-alt-fill me-1"></i>' . e($bCode . ' · ' . strtoupper($bShort)) . '</span>';
+    }
     echo '<div class="cyber-hero mb-4"><div class="row g-3 align-items-center position-relative" style="z-index:2">';
     echo '<div class="' . ($metrics ? 'col-xl-8' : 'col-12 d-flex flex-wrap align-items-center justify-content-between gap-3') . '">';
     echo '<div>';
-    echo '<div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-2" style="background:rgba(255,87,34,0.18);border:1px solid rgba(255,87,34,0.4);font-size:0.72rem;font-weight:700;letter-spacing:0.08em;color:#ffab91">';
-    echo '<span class="pulse-dot"></span> ' . e(strtoupper($badge)) . '</div>';
+    echo '<div class="d-inline-flex flex-wrap align-items-center gap-2 px-3 py-1 rounded-pill mb-2" style="background:rgba(255,87,34,0.18);border:1px solid rgba(255,87,34,0.4);font-size:0.72rem;font-weight:700;letter-spacing:0.08em;color:#ffab91">';
+    echo '<span class="pulse-dot"></span> ' . e(strtoupper($badge)) . $roleBadgeExtra . '</div>';
     echo '<h1 class="display-6 fw-bold text-white mb-1" style="font-family:\'Barlow Condensed\',sans-serif;letter-spacing:0.02em;line-height:1.05">'
         . e($title) . ($accent !== '' ? ' <span style="color:#ff7043">' . e($accent) . '</span>' : '') . '</h1>';
     echo '<p class="mb-' . ($actionsHtml !== '' && $metrics ? '3' : '0') . ' text-white-50 small" style="max-width:660px">' . e($subtitle) . '</p>';

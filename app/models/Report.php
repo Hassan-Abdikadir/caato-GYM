@@ -52,7 +52,7 @@ final class Report
             if ($type === 'expired') { $w[] = "(" . Customer::EFF . ")='expired'"; }
             $rows = DB::all(Customer::base() . ' WHERE ' . implode(' AND ', $w) . $sc . ' ORDER BY c.full_name', array_merge($p, $sp));
             $out = [];
-            foreach ($rows as $r) $out[] = [$r['customer_code'], $r['full_name'], $r['phone'], ucfirst($r['gender']), $r['reg_branch'], $r['registration_date'],
+            foreach ($rows as $r) $out[] = [$r['customer_code'], $r['full_name'], $r['phone'], ucfirst($r['gender']), short_branch($r['reg_branch']), $r['registration_date'],
                 $r['plan_name'] ?: '-', $r['eff_status'], $r['payment_status'] ?: '-', $r['end_date'] ?: '-'];
             return [$title, ['Customer ID', 'Name', 'Phone', 'Gender', 'Registered Branch', 'Reg. Date', 'Plan', 'Membership', 'Payment', 'Expiry'], $out];
         }
@@ -106,7 +106,7 @@ final class Report
                 (SELECT COALESCE(SUM(x.amount),0) FROM expenses x WHERE x.branch_id=b.id AND x.expense_date BETWEEN ? AND ?) AS expenses
                 FROM branches b WHERE 1=1 $sc ORDER BY b.id", array_merge([$from, $to, $from, $to, $from, $to, $from, $to, $from, $to, $from, $to], $sp));
             $out = [];
-            foreach ($rows as $r) $out[] = [$r['name'], $r['new_customers'], $r['active_members'], $r['visits'], $r['payments'], self::d($r['revenue']), self::d($r['expenses']), self::d($r['revenue'] - $r['expenses'])];
+            foreach ($rows as $r) $out[] = [short_branch($r['name']), $r['new_customers'], $r['active_members'], $r['visits'], $r['payments'], self::d($r['revenue']), self::d($r['expenses']), self::d($r['revenue'] - $r['expenses'])];
             return [$title, ['Branch', 'New Customers', 'Active Members', 'Visits', 'Payments', 'Revenue', 'Expenses', 'Net'], $out];
         }
 

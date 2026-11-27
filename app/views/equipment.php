@@ -2,6 +2,7 @@
 $eqActs = $canManage ? '<button class="btn btn-brand btn-sm px-3 py-2" onclick="eqForm()"><i class="bi bi-plus-circle-fill"></i> Register Equipment Asset</button>' : '';
 $opCnt = count(array_filter($rows, fn($x) => $x['condition_status'] === 'operational'));
 $alCnt = count($rows) - $opCnt;
+$totalUnits = array_sum(array_map(fn($x) => (int) ($x['quantity'] ?? 1), $rows));
 page_banner(
   '6-BRANCH HARDWARE FLEET · PREVENTIVE MAINTENANCE',
   'Equipment &amp;',
@@ -15,6 +16,70 @@ page_banner(
   ]
 );
 ?>
+
+<!-- 3D Holographic Equipment KPI Strip -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card stat stat-pro cyan">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-tools stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-tools"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> Fleet Total</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= count($rows) ?> Models · <?= (int) $totalUnits ?> Units</div>
+        <div class="stat-title">REGISTERED GYM MACHINES</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-building-gear"></i> Cardio · Strength · Free Weights</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:94%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat stat-pro emerald">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-check-circle-fill stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-check-circle-fill"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> Floor Ready</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= $opCnt ?> Operational</div>
+        <div class="stat-title">ACTIVE FLOOR HARDWARE</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-shield-check"></i> Passes safety &amp; calibration checks</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:<?= count($rows) ? round(($opCnt / count($rows)) * 100) : 100 ?>%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat stat-pro <?= $alCnt > 0 ? 'red' : 'amber' ?>">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-wrench-adjustable-circle-fill stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-wrench-adjustable-circle-fill"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> Maintenance</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= $alCnt ?> Alerts</div>
+        <div class="stat-title">UNDER SERVICE / REPAIR</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-calendar-check"></i> Preventive service schedule tracked</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:<?= $alCnt > 0 ? 60 : 18 ?>%"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="d-flex flex-wrap gap-2 mb-3">
   <?php foreach ([
@@ -35,12 +100,22 @@ page_banner(
         <?= opts(branch_list(false), $br, 'id', 'name', 'All 6 Branches') ?>
       </select>
     </form>
+  <?php else: ?>
+    <span class="gate-visit-pill active ms-auto"><i class="bi bi-geo-alt-fill text-danger"></i> <?= e(short_branch(Auth::user()['branch_name'] ?? '')) ?> Fleet</span>
   <?php endif; ?>
 </div>
 
-<div class="card shadow-sm">
+<div class="card card-bento-panel shadow-sm">
+  <i class="bi bi-tools panel-watermark"></i>
+  <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <div class="d-flex align-items-center gap-2">
+      <span class="panel-hdr-ico cyan"><i class="bi bi-tools"></i></span>
+      <span>6-Branch Hardware &amp; Equipment Matrix</span>
+    </div>
+    <span class="stat-pill"><span class="stat-dot"></span> <?= count($rows) ?> Listed Assets</span>
+  </div>
   <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
+    <table class="table table-hover table-pro-matrix align-middle mb-0">
       <thead>
         <tr>
           <th>Asset Code</th>
@@ -62,8 +137,8 @@ page_banner(
             <?php if ($r['notes']): ?><small class="text-muted"><?= e($r['notes']) ?></small><?php endif; ?>
           </td>
           <td><span class="badge text-bg-light border"><?= e($r['category']) ?></span></td>
-          <td><i class="bi bi-geo-alt-fill text-danger me-1"></i><?= e(str_replace('CAATO FITNESS GYM – ', '', $r['branch_name'])) ?></td>
-          <td><span class="fw-bold"><?= (int) $r['quantity'] ?></span></td>
+          <td><span class="gate-visit-pill"><i class="bi bi-geo-alt-fill text-danger"></i> <?= e(short_branch($r['branch_name'])) ?></span></td>
+          <td><span class="matrix-num"><?= (int) $r['quantity'] ?></span><span class="matrix-unit">units</span></td>
           <td><?= badge($r['condition_status']) ?></td>
           <td>
             <small class="d-block text-muted">Last: <?= fmt_date($r['last_service_date']) ?></small>

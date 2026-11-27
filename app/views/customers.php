@@ -20,6 +20,64 @@ page_banner(
 );
 ?>
 
+<!-- 3D Bento KPI Strip -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card stat stat-pro brand h-100">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-people-fill stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-people-fill"></i></div>
+        <span class="stat-pill"><span class="stat-dot"></span>DIRECTORY</span>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= (int) ($counts['total'] ?? 0) ?></div>
+        <div class="stat-title">Registered Athletes</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub">Shared 6-Branch Profiles</span>
+        <div class="stat-spark"><span class="stat-spark-fill"></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat stat-pro green h-100">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-patch-check-fill stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-patch-check-fill"></i></div>
+        <span class="stat-pill"><span class="stat-dot"></span>ACTIVE PASSES</span>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= (int) ($counts['active'] ?? 0) ?></div>
+        <div class="stat-title">Active Subscriptions</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub">Cleared for Biometric Gate</span>
+        <div class="stat-spark"><span class="stat-spark-fill"></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat stat-pro cyan h-100">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-fingerprint stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-fingerprint"></i></div>
+        <span class="stat-pill"><span class="stat-dot"></span>BIOMETRIC ID</span>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= (int) ($counts['biometric'] ?? 0) ?></div>
+        <div class="stat-title">Biometric Door Enrolled</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub">Instant Turnstile Access</span>
+        <div class="stat-spark"><span class="stat-spark-fill"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Quick Status Filter Pills -->
 <div class="d-flex flex-wrap gap-2 mb-3">
   <?php foreach ([
@@ -36,8 +94,20 @@ page_banner(
   <?php endforeach; ?>
 </div>
 
-<div class="card mb-4 shadow-sm">
-  <div class="card-body p-3 bg-body-tertiary">
+<div class="card card-bento-panel shadow-sm">
+  <i class="bi bi-people-fill panel-watermark"></i>
+  <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <div class="d-flex align-items-center gap-2">
+      <span class="panel-hdr-ico brand"><i class="bi bi-people-fill"></i></span>
+      <div>
+        <div class="lh-1">Unified Athlete Directory</div>
+        <small class="text-muted fw-normal" style="font-size:0.71rem;font-family:'Outfit'">360° Profiles, Biometric Tokens, WhatsApp Reminders &amp; PVC Cards</small>
+      </div>
+    </div>
+    <span class="badge text-bg-secondary"><?= (int) $pg['total'] ?> Record(s)</span>
+  </div>
+
+  <div class="card-body p-3 bg-body-tertiary border-bottom position-relative" style="z-index:2">
     <form class="row g-2 align-items-center" method="get">
       <input type="hidden" name="page" value="customers">
       <div class="col-md-5">
@@ -46,11 +116,19 @@ page_banner(
           <input name="q" value="<?= e($q) ?>" class="form-control" placeholder="Search member name, phone, ID (CF-...) or fingerprint token…">
         </div>
       </div>
+      <?php if (Auth::isSuper()): ?>
       <div class="col-md-3">
         <select name="branch" class="form-select">
           <?= opts($allBranches, $br, 'id', 'name', 'Home Facility: All 6 Branches') ?>
         </select>
       </div>
+      <?php else: ?>
+      <div class="col-md-3">
+        <div class="form-control bg-body-secondary fw-semibold text-truncate">
+          <i class="bi bi-geo-alt-fill text-danger me-1"></i> <?= e(short_branch(Auth::user()['branch_name'] ?? '')) ?>
+        </div>
+      </div>
+      <?php endif; ?>
       <div class="col-md-2">
         <select name="status" class="form-select">
           <option value="">Status: Any</option>
@@ -64,33 +142,31 @@ page_banner(
       </div>
     </form>
   </div>
-</div>
 
-<div class="card shadow-sm">
-  <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
+  <div class="table-responsive position-relative" style="z-index:2">
+    <table class="table table-hover table-pro-matrix align-middle mb-0">
       <thead>
         <tr>
-          <th style="width:58px">Photo</th>
+          <th class="ps-4" style="width:58px">Photo</th>
           <th>Member Identity</th>
           <th>Contact &amp; Goal</th>
           <th>Home Facility</th>
           <th>Subscription</th>
           <th>Status</th>
           <th>Expiry &amp; Visits</th>
-          <th class="text-end">Actions</th>
+          <th class="pe-4 text-end">Actions</th>
         </tr>
       </thead>
       <tbody>
       <?php foreach ($rows as $r): ?>
         <tr>
-          <td><img class="avatar" src="<?= photo_url($r['profile_picture']) ?>" alt=""></td>
+          <td class="ps-4"><img class="avatar" src="<?= photo_url($r['profile_picture']) ?>" alt=""></td>
           <td>
-            <a class="fw-bold d-block" href="<?= url('customer_view', ['id' => $r['id']]) ?>"><?= e($r['full_name']) ?></a>
+            <a class="branch-node-title d-block text-decoration-none" href="<?= url('customer_view', ['id' => $r['id']]) ?>"><?= e($r['full_name']) ?></a>
             <small class="text-muted font-monospace">
               <?= e($r['customer_code']) ?>
               <?php if (!empty($r['fingerprint_id'])): ?>
-                <span class="badge text-bg-success ms-1" title="Biometric Door Enrolled: <?= e($r['fingerprint_id']) ?>"><i class="bi bi-fingerprint"></i></span>
+                <span class="badge text-bg-success ms-1" title="Biometric Door Enrolled: <?= e($r['fingerprint_id']) ?>"><i class="bi bi-fingerprint"></i> <?= e($r['fingerprint_id']) ?></span>
               <?php endif; ?>
             </small>
           </td>
@@ -99,7 +175,7 @@ page_banner(
             <small class="text-muted d-block text-truncate" style="max-width:170px"><i class="bi bi-bullseye text-brand me-1"></i><?= e($r['fitness_goal'] ?? 'General Fitness') ?></small>
           </td>
           <td>
-            <span class="small"><i class="bi bi-geo-alt-fill text-danger me-1"></i><?= e(str_replace('CAATO FITNESS GYM – ', '', $r['reg_branch'])) ?></span>
+            <span class="small fw-semibold"><i class="bi bi-geo-alt-fill text-danger me-1"></i><?= e(short_branch($r['reg_branch'])) ?></span>
             <?php if (!empty($r['trainer_name'])): ?>
               <small class="text-muted d-block"><i class="bi bi-trophy-fill text-warning me-1"></i><?= e($r['trainer_name']) ?></small>
             <?php endif; ?>
@@ -110,10 +186,10 @@ page_banner(
             <?= $r['ms_id'] && $r['payment_status'] !== 'paid' ? badge($r['payment_status']) : '' ?>
           </td>
           <td>
-            <div class="small fw-semibold"><?= fmt_date($r['end_date']) ?></div>
+            <div class="small fw-bold"><?= fmt_date($r['end_date']) ?></div>
             <small class="text-muted"><?= (int) ($r['total_visits'] ?? 0) ?> visits</small>
           </td>
-          <td class="text-end text-nowrap">
+          <td class="pe-4 text-end text-nowrap">
             <a class="btn btn-sm btn-whatsapp py-1 px-2" target="_blank" href="<?= e(whatsapp_url($r['phone'], "Asc {$r['full_name']} ({$r['customer_code']}), kusoo dhawow CAATO FITNESS GYM!")) ?>" title="Message on WhatsApp">
               <i class="bi bi-whatsapp"></i>
             </a>
@@ -123,7 +199,7 @@ page_banner(
             <a class="btn btn-sm btn-outline-brand py-1 px-2" href="<?= url('customer_view', ['id' => $r['id']]) ?>">
               <i class="bi bi-person-bounding-box"></i> 360°
             </a>
-            <?php if (Auth::can('customers.edit')): ?>
+            <?php if (Auth::isSuper() || Auth::role() === 'branch_manager'): ?>
             <form method="post" action="<?= url('customer_delete') ?>" class="d-inline">
               <?= csrf_field() ?>
               <input type="hidden" name="id" value="<?= $r['id'] ?>">
@@ -145,5 +221,5 @@ page_banner(
       </tbody>
     </table>
   </div>
-  <div class="card-footer bg-transparent py-3"><?= pager($pg) ?></div>
+  <div class="card-footer bg-transparent py-3 position-relative" style="z-index:2"><?= pager($pg) ?></div>
 </div>

@@ -53,16 +53,24 @@ if ($showMoney) {
         FROM payment_methods pm WHERE pm.status='active' ORDER BY month_amount DESC, pm.id");
 }
 
-// Gender Split
+// Gender Split & Coaching Telemetry
 $maleCount = (int) DB::val("SELECT COUNT(*) FROM customers c WHERE c.gender='male'$cw");
 $femaleCount = (int) DB::val("SELECT COUNT(*) FROM customers c WHERE c.gender='female'$cw");
 $biometricCount = (int) DB::val("SELECT COUNT(*) FROM customers c WHERE c.fingerprint_id IS NOT NULL AND c.fingerprint_id<>''$cw");
+$assignedTrainees = 0;
+$bmiChecksCount = 0;
+try {
+    $assignedTrainees = (int) DB::val("SELECT COUNT(*) FROM customers c WHERE c.assigned_trainer_id IS NOT NULL$cw");
+    $bmiChecksCount = (int) DB::val("SELECT COUNT(*) FROM body_metrics bm JOIN customers c ON c.id=bm.customer_id WHERE 1=1$cw");
+} catch (Throwable $e) {}
 
 $S = [
  'customers' => (int) DB::val("SELECT COUNT(*) FROM customers c WHERE 1=1$cw"),
  'male' => $maleCount,
  'female' => $femaleCount,
  'biometric' => $biometricCount,
+ 'assigned_trainees' => $assignedTrainees,
+ 'bmi_checks' => $bmiChecksCount,
  'active' => (int) DB::val("SELECT COUNT(DISTINCT m.customer_id) FROM memberships m JOIN customers c ON c.id=m.customer_id WHERE m.status='active' AND m.end_date>=CURDATE()$cw"),
  'expired' => (int) DB::val("SELECT COUNT(*) FROM customers c WHERE c.status='active'$cw AND EXISTS(SELECT 1 FROM memberships x WHERE x.customer_id=c.id AND x.status='expired') AND NOT EXISTS(SELECT 1 FROM memberships y WHERE y.customer_id=c.id AND y.status='active' AND y.end_date>=CURDATE())"),
  'today' => (int) DB::val("SELECT COUNT(*) FROM attendance a WHERE a.attendance_date=CURDATE()$aw"),
@@ -127,6 +135,60 @@ $charts = [
 $expiring = DB::all("SELECT c.id, c.full_name, c.customer_code, c.phone, c.profile_picture, m.end_date, pl.name AS plan FROM memberships m JOIN customers c ON c.id=m.customer_id JOIN membership_plans pl ON pl.id=m.plan_id WHERE m.status='active' AND m.end_date BETWEEN CURDATE() AND CURDATE() + INTERVAL $days DAY$cw ORDER BY m.end_date LIMIT 8");
 $recent = DB::all("SELECT a.check_in_at, a.checkin_method, c.id, c.full_name, c.customer_code, c.profile_picture, b.name AS branch, rb.name AS reg_branch FROM attendance a JOIN customers c ON c.id=a.customer_id JOIN branches b ON b.id=a.branch_id JOIN branches rb ON rb.id=c.registered_branch_id WHERE 1=1$aw ORDER BY a.id DESC LIMIT 8");
 
+// Branch Manager Dedicated Telemetry: Assigned Branch Info, Branch Workforce & Latest Branch Revenue Ledger
+$myBranch = $B > 0 ? DB::one('SELECT * FROM branches WHERE id=?', [$B]) : null;
+$branchTeam = [];
+$branchTxns = [];
+if ($B > 0 && in_array(Auth::role(), ['branch_manager', 'super_admin'], true)) {
+    $branchTeam = DB::all("SELECT e.id, e.full_name, e.phone, e.position, e.status, r.label AS role_label, u.username
+                           FROM employees e JOIN roles r ON r.id=e.role_id LEFT JOIN users u ON u.id=e.user_id
+                           WHERE e.branch_id=? ORDER BY e.status, e.full_name LIMIT 8", [$B]);
+    $branchTxns = DB::all("SELECT p.id, p.receipt_no AS ref_no, 'Membership' AS kind, c.full_name AS title, pm.name AS channel, p.amount, p.payment_date AS dt
+                           FROM payments p JOIN customers c ON c.id=p.customer_id JOIN payment_methods pm ON pm.id=p.method_id
+                           WHERE p.branch_id=? ORDER BY p.id DESC LIMIT 6", [$B]);
+}
+
+// Trainer & Receptionist Dedicated Telemetry: Fitness Goals Split, Active Trainees, Recent Body/BMI Checks & Front-Desk Queue
+$goalSplit = [];
+$recentMetrics = [];
+$trainerAthletes = [];
+$deskPending = [];
+$deskRecentMembers = [];
+$accRecentPayments = [];
+$accRecentExpenses = [];
+try {
+    $goalSplit = DB::all("SELECT COALESCE(NULLIF(c.fitness_goal,''),'General Fitness') AS goal, COUNT(*) AS cnt
+                          FROM customers c WHERE 1=1$cw GROUP BY goal ORDER BY cnt DESC LIMIT 4");
+    $recentMetrics = DB::all("SELECT bm.*, c.id AS cid, c.full_name, c.customer_code, c.profile_picture, c.fitness_goal
+                              FROM body_metrics bm JOIN customers c ON c.id=bm.customer_id
+                              WHERE 1=1$cw ORDER BY bm.recorded_date DESC, bm.id DESC LIMIT 6");
+    $trainerAthletes = DB::all("SELECT c.id, c.full_name, c.customer_code, c.phone, c.profile_picture, c.fitness_goal,
+                                       t.full_name AS trainer_name,
+                                       (SELECT weight_kg FROM body_metrics bm WHERE bm.customer_id=c.id ORDER BY bm.id DESC LIMIT 1) AS last_weight,
+                                       (SELECT bmi FROM body_metrics bm WHERE bm.customer_id=c.id ORDER BY bm.id DESC LIMIT 1) AS last_bmi
+                                FROM customers c LEFT JOIN trainers t ON t.id=c.assigned_trainer_id
+                                WHERE 1=1$cw ORDER BY c.assigned_trainer_id IS NULL, c.id DESC LIMIT 8");
+    if (in_array(Auth::role(), ['receptionist', 'accountant'], true)) {
+        $deskPending = DB::all("SELECT m.id, m.price, m.amount_paid, c.id AS cid, c.full_name, c.customer_code, c.phone, c.profile_picture, pl.name AS plan_name
+                                FROM memberships m JOIN customers c ON c.id=m.customer_id JOIN membership_plans pl ON pl.id=m.plan_id
+                                WHERE m.status='pending'$cw ORDER BY m.id DESC LIMIT 6");
+    }
+    if (Auth::role() === 'receptionist') {
+        $deskRecentMembers = DB::all("SELECT c.id, c.full_name, c.customer_code, c.phone, c.profile_picture, c.fingerprint_id, c.registration_date,
+                                             (SELECT status FROM memberships m WHERE m.customer_id=c.id ORDER BY m.id DESC LIMIT 1) AS ms_status,
+                                             (SELECT pl.name FROM memberships m JOIN membership_plans pl ON pl.id=m.plan_id WHERE m.customer_id=c.id ORDER BY m.id DESC LIMIT 1) AS plan_name
+                                      FROM customers c WHERE 1=1$cw ORDER BY c.id DESC LIMIT 6");
+    }
+    if (Auth::role() === 'accountant') {
+        $accRecentPayments = DB::all("SELECT p.id, p.receipt_no, p.amount, p.reference, p.payment_date, c.id AS cid, c.full_name, c.customer_code, pm.name AS method_name
+                                      FROM payments p JOIN customers c ON c.id=p.customer_id JOIN payment_methods pm ON pm.id=p.method_id
+                                      WHERE 1=1$pw ORDER BY p.id DESC LIMIT 6");
+        $accRecentExpenses = DB::all("SELECT x.*, u.full_name AS by_name
+                                      FROM expenses x LEFT JOIN users u ON u.id=x.created_by
+                                      WHERE 1=1$xw ORDER BY x.expense_date DESC, x.id DESC LIMIT 6");
+    }
+} catch (Throwable $e) {}
+
 render('dashboard', [
     'pageTitle' => 'Operations Console',
     'S' => $S,
@@ -138,6 +200,16 @@ render('dashboard', [
     'activeClasses' => $activeClasses,
     'eqAlertList' => $eqAlertList,
     'lowStockList' => $lowStockList,
+    'myBranch' => $myBranch,
+    'branchTeam' => $branchTeam,
+    'branchTxns' => $branchTxns,
+    'goalSplit' => $goalSplit,
+    'recentMetrics' => $recentMetrics,
+    'trainerAthletes' => $trainerAthletes,
+    'deskPending' => $deskPending,
+    'deskRecentMembers' => $deskRecentMembers,
+    'accRecentPayments' => $accRecentPayments,
+    'accRecentExpenses' => $accRecentExpenses,
     'B' => $B,
     'showMoney' => $showMoney,
     'days' => $days

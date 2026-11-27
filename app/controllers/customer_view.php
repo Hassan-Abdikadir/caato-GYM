@@ -34,6 +34,17 @@ if (is_post()) {
             $mid = (int) req('metric_id');
             DB::exec('DELETE FROM body_metrics WHERE id=? AND customer_id=?', [$mid, $id]);
             flash('success', 'Measurement entry removed.');
+        } elseif ($act === 'update_coaching') {
+            $goal = trim(req('fitness_goal')) ?: 'General Fitness';
+            $trId = (int) req('assigned_trainer_id') ?: null;
+            $med  = trim(req('medical_notes')) ?: null;
+            DB::update('customers', [
+                'fitness_goal' => $goal,
+                'assigned_trainer_id' => $trId,
+                'medical_notes' => $med,
+            ], 'id=?', [$id]);
+            audit('coaching_update', 'customer', $id, "Goal: $goal");
+            flash('success', 'Athlete fitness goal, personal coach & training notes updated.');
         }
     } catch (RuntimeException $e) {
         flash('error', $e->getMessage());
@@ -46,11 +57,13 @@ try {
     $metrics = DB::all('SELECT * FROM body_metrics WHERE customer_id=? ORDER BY recorded_date DESC, id DESC LIMIT 24', [$id]);
 } catch (Throwable $e) {}
 
+$brScope = !Auth::isSuper() && Auth::branchId() ? ' AND branch_id=' . (int) Auth::branchId() : '';
 render('customer_view', [
     'pageTitle' => $c['full_name'],
     'c' => $c,
     'access' => Membership::access($c),
     'metrics' => $metrics,
+    'trainers' => DB::all("SELECT id, full_name, specialization FROM trainers WHERE status='active'$brScope ORDER BY full_name"),
     'history' => DB::all('SELECT m.*, pl.name AS plan_name, b.name AS branch_name FROM memberships m JOIN membership_plans pl ON pl.id=m.plan_id JOIN branches b ON b.id=m.branch_id WHERE m.customer_id=? ORDER BY m.id DESC', [$id]),
     'pays' => DB::all('SELECT p.*, pm.name AS method, b.name AS branch FROM payments p JOIN payment_methods pm ON pm.id=p.method_id JOIN branches b ON b.id=p.branch_id WHERE p.customer_id=? ORDER BY p.id DESC LIMIT 50', [$id]),
     'att' => DB::all('SELECT a.check_in_at, a.checkin_method, b.name AS branch FROM attendance a JOIN branches b ON b.id=a.branch_id WHERE a.customer_id=? ORDER BY a.id DESC LIMIT 30', [$id]),

@@ -14,26 +14,59 @@ page_banner(
 );
 ?>
 
-<div class="row g-2 mb-4">
+<!-- 3D Holographic Role Breakdown Cards -->
+<div class="row g-3 mb-4">
   <?php
   $roleCounts = [];
   foreach ($rows as $ur) $roleCounts[$ur['role_label']] = ($roleCounts[$ur['role_label']] ?? 0) + 1;
-  foreach ($roleCounts as $rLbl => $rCnt): ?>
-    <div class="col-6 col-md-3 col-xl-2">
-      <div class="card stat py-2 px-3">
-        <div class="ico" style="width:42px;height:42px;font-size:1.25rem!important"><i class="bi bi-shield-check"></i></div>
-        <div>
-          <div class="num fs-5"><?= (int) $rCnt ?></div>
-          <small style="font-size:0.68rem"><?= e($rLbl) ?></small>
+  $rThemes = ['brand', 'cyan', 'emerald', 'violet', 'amber', 'red'];
+  $rIcons  = [
+    'Super Admin'    => 'bi-shield-shaded',
+    'Branch Manager' => 'bi-building-fill-gear',
+    'Receptionist'   => 'bi-person-workspace',
+    'Accountant'     => 'bi-safe2-fill',
+    'Trainer'        => 'bi-trophy-fill',
+  ];
+  $rIdx = 0;
+  foreach ($roleCounts as $rLbl => $rCnt):
+    $th = $rThemes[$rIdx % count($rThemes)];
+    $ic = $rIcons[$rLbl] ?? 'bi-shield-check';
+    $pct = count($rows) > 0 ? min(100, max(18, (int) round(($rCnt / count($rows)) * 100))) : 40;
+    $rIdx++;
+  ?>
+    <div class="col-6 col-md-4 col-xl">
+      <div class="card stat stat-pro <?= $th ?> h-100">
+        <div class="stat-glow-orb"></div>
+        <i class="bi <?= $ic ?> stat-watermark"></i>
+        <div class="stat-top">
+          <div class="ico" style="width:44px;height:44px;font-size:1.2rem!important"><i class="bi <?= $ic ?>"></i></div>
+          <div class="stat-meta-right">
+            <span class="stat-pill"><span class="stat-dot"></span> RBAC</span>
+          </div>
+        </div>
+        <div class="stat-body">
+          <div class="num fs-3"><?= (int) $rCnt ?></div>
+          <div class="stat-title"><?= e($rLbl) ?></div>
+        </div>
+        <div class="stat-foot">
+          <div class="stat-spark"><div class="stat-spark-fill" style="width:<?= $pct ?>%"></div></div>
         </div>
       </div>
     </div>
   <?php endforeach; ?>
 </div>
 
-<div class="card shadow-sm">
+<div class="card card-bento-panel shadow-sm">
+  <i class="bi bi-shield-lock-fill panel-watermark"></i>
+  <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <div class="d-flex align-items-center gap-2">
+      <span class="panel-hdr-ico brand"><i class="bi bi-shield-lock-fill"></i></span>
+      <span>System Users &amp; RBAC Security Matrix</span>
+    </div>
+    <span class="stat-pill"><span class="stat-dot"></span> <?= count($rows) ?> Active &amp; Scoped Accounts</span>
+  </div>
   <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
+    <table class="table table-hover table-pro-matrix align-middle mb-0">
       <thead>
         <tr>
           <th>Full Name</th>
@@ -52,9 +85,14 @@ page_banner(
             <div class="fw-bold fs-6"><?= e($r['full_name']) ?></div>
             <small class="text-muted"><i class="bi bi-envelope me-1"></i><?= e($r['email']) ?></small>
           </td>
-          <td><span class="badge text-bg-light border font-monospace"><i class="bi bi-person me-1"></i><?= e($r['username']) ?></span></td>
+          <td><span class="badge text-bg-light border font-monospace"><i class="bi bi-person-fill-lock text-brand me-1"></i><?= e($r['username']) ?></span></td>
           <td><span class="badge text-bg-secondary"><?= e($r['role_label']) ?></span></td>
-          <td><i class="bi bi-geo-alt-fill text-danger me-1"></i><?= e($r['branch_name'] ?: 'All Branches (Super Admin)') ?></td>
+          <td>
+            <span class="gate-visit-pill">
+              <i class="bi bi-geo-alt-fill text-danger"></i>
+              <?= e($r['branch_name'] ? short_branch($r['branch_name']) : 'All 6 Branches (Super Admin)') ?>
+            </span>
+          </td>
           <td><small class="text-muted"><i class="bi bi-clock me-1"></i><?= fmt_dt($r['last_login']) ?></small></td>
           <td>
             <?= badge($r['status']) ?>
@@ -62,8 +100,8 @@ page_banner(
               <span class="badge text-bg-danger ms-1"><i class="bi bi-lock-fill"></i> Locked</span>
             <?php endif; ?>
           </td>
-          <td class="text-end">
-            <button class="btn btn-sm btn-outline-secondary" onclick="uForm(<?= jsattr(["id" => $r["id"], "full_name" => $r["full_name"], "username" => $r["username"], "email" => $r["email"], "role_id" => $r["role_id"], "branch_id" => $r["branch_id"], "status" => $r["status"]]) ?>)">
+          <td class="text-end text-nowrap">
+            <button class="btn btn-sm btn-outline-brand" onclick="uForm(<?= jsattr(["id" => $r["id"], "full_name" => $r["full_name"], "username" => $r["username"], "email" => $r["email"], "role_id" => $r["role_id"], "branch_id" => $r["branch_id"], "status" => $r["status"]]) ?>)">
               <i class="bi bi-key-fill"></i> Edit / Reset Password
             </button>
             <form method="post" class="d-inline">

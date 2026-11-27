@@ -15,7 +15,8 @@ $pctLeft = $totalDays > 0 ? min(100, max(0, (int) round(($daysLeft / $totalDays)
 ?>
 <?php
 $cvActs = '<a class="btn btn-whatsapp btn-sm px-3 py-2" href="' . e(whatsapp_url($c['phone'], $waRemind)) . '" target="_blank"><i class="bi bi-whatsapp"></i> WhatsApp Alert</a>'
-  . '<a class="btn btn-sm px-3 py-2" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2)" href="' . url('customer_card', ['id' => $c['id']]) . '" target="_blank"><i class="bi bi-person-vcard-fill text-warning"></i> PVC ID Card</a>';
+  . '<a class="btn btn-sm px-3 py-2" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2)" href="' . url('customer_card', ['id' => $c['id']]) . '" target="_blank"><i class="bi bi-person-vcard-fill text-warning"></i> PVC ID Card</a>'
+  . '<button type="button" class="btn btn-sm px-3 py-2" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2)" data-bs-toggle="modal" data-bs-target="#coachModal"><i class="bi bi-trophy-fill text-warning"></i> Coach &amp; Goal</button>';
 if (Auth::can('customers.edit')) {
   $cvActs .= '<button type="button" class="btn btn-sm px-3 py-2" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2)" data-bs-toggle="modal" data-bs-target="#fpModal"><i class="bi bi-fingerprint text-success"></i> Biometric Token</button>'
     . '<a class="btn btn-sm px-3 py-2" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2)" href="' . url('customer_edit', ['id' => $c['id']]) . '"><i class="bi bi-pencil-square text-info"></i> Edit Profile</a>';
@@ -23,25 +24,109 @@ if (Auth::can('customers.edit')) {
 if (Auth::can('attendance.checkin')) {
   $cvActs .= '<a class="btn btn-brand btn-sm px-3 py-2" href="' . url('attendance', ['q' => $c['customer_code']]) . '"><i class="bi bi-door-open-fill"></i> Door Check-in</a>';
 }
+$thirdMetric = Auth::can('payments.view')
+  ? [money($balance), 'Balance Due', $balance > 0 ? 'danger' : 'success']
+  : [$latestMetric ? (float) $latestMetric['weight_kg'] . ' kg' : '—', 'Current Weight', 'info'];
 page_banner(
   '360° MEMBER PROFILE · ' . $c['customer_code'] . (!empty($c['fingerprint_id']) ? ' · BIOMETRIC ' . $c['fingerprint_id'] : ''),
   $c['full_name'],
   '',
-  'Home Facility: ' . $c['reg_branch'] . ' · Fitness Goal: ' . ($c['fitness_goal'] ?? 'General Fitness'),
+  'Home Facility: ' . short_branch($c['reg_branch']) . ' · Fitness Goal: ' . ($c['fitness_goal'] ?? 'General Fitness'),
   $cvActs,
   [
     [(int) ($c['total_visits'] ?? 0), 'Total Visits', 'info'],
     [$daysLeft . 'd', 'Days Left', $daysLeft > 7 ? 'success' : 'warning'],
-    [money($balance), 'Balance Due', $balance > 0 ? 'danger' : 'success'],
+    $thirdMetric,
   ]
 );
 ?>
 
+<!-- 3D Holographic Athlete Telemetry Strip -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-3">
+    <div class="card stat stat-pro <?= $ok ? 'emerald' : 'red' ?> h-100">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-patch-check-fill stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-<?= $ok ? 'unlock-fill' : 'lock-fill' ?>"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> Gate Status</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num fs-4"><?= e($c['plan_name'] ?: 'No Active Plan') ?></div>
+        <div class="stat-title"><?= $daysLeft ?> DAYS REMAINING</div>
+      </div>
+      <div class="stat-foot">
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:<?= max(12, $pctLeft) ?>%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="card stat stat-pro brand h-100">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-bullseye stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-bullseye"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> Program</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num fs-4 text-truncate"><?= e($c['fitness_goal'] ?? 'General Fitness') ?></div>
+        <div class="stat-title text-truncate">COACH: <?= e(strtoupper($c['trainer_name'] ?? 'FLOOR COACH')) ?></div>
+      </div>
+      <div class="stat-foot">
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:85%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="card stat stat-pro amber h-100">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-heart-pulse-fill stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-heart-pulse-fill"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> InBody / BMI</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num fs-4"><?= $latestMetric ? (float) $latestMetric['weight_kg'] . ' kg' : 'Not Logged' ?></div>
+        <div class="stat-title"><?= $latestMetric && $latestMetric['bmi'] ? 'BMI ' . $latestMetric['bmi'] . ' · ' . strtoupper($bmiLabel) : 'RECORD BASELINE CHECK' ?></div>
+      </div>
+      <div class="stat-foot">
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:<?= $latestMetric ? 90 : 25 ?>%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="card stat stat-pro cyan h-100">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-fingerprint stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-fingerprint"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> Attendance</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num fs-4"><?= (int) ($c['total_visits'] ?? 0) ?> Visits</div>
+        <div class="stat-title"><?= !empty($c['fingerprint_id']) ? 'TOKEN: ' . e($c['fingerprint_id']) : 'QR & DESK ACCESS' ?></div>
+      </div>
+      <div class="stat-foot">
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:88%"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="row g-3 mb-4">
   <!-- Identity & Biometric Card -->
   <div class="col-lg-5">
-    <div class="card h-100 shadow-sm">
-      <div class="card-body p-4">
+    <div class="card card-bento-panel h-100 shadow-sm">
+      <i class="bi bi-person-vcard-fill panel-watermark"></i>
+      <div class="card-body p-4 position-relative" style="z-index:2">
         <div class="d-flex gap-3 align-items-center">
           <img class="avatar-lg" src="<?= photo_url($c['profile_picture']) ?>" alt="">
           <div class="overflow-hidden">
@@ -74,7 +159,7 @@ page_banner(
           <dt class="col-5 text-muted"><i class="bi bi-shield-exclamation me-1"></i> Emergency</dt>
           <dd class="col-7"><?= e(trim(($c['emergency_name'] ?? '') . ' ' . ($c['emergency_phone'] ?? '')) ?: '—') ?></dd>
           <dt class="col-5 text-muted"><i class="bi bi-building me-1"></i> Home Facility</dt>
-          <dd class="col-7"><span class="badge text-bg-secondary"><i class="bi bi-geo-alt-fill text-danger"></i> <?= e($c['reg_branch']) ?></span> · <?= fmt_date($c['registration_date']) ?></dd>
+          <dd class="col-7"><span class="badge text-bg-secondary"><i class="bi bi-geo-alt-fill text-danger"></i> <?= e(short_branch($c['reg_branch'])) ?></span> · <?= fmt_date($c['registration_date']) ?></dd>
           <dt class="col-5 text-muted"><i class="bi bi-clock-history me-1"></i> Last Door Entry</dt>
           <dd class="col-7"><?= fmt_dt($c['last_attendance']) ?></dd>
         </dl>
@@ -84,14 +169,21 @@ page_banner(
 
   <!-- Membership, Countdown & Access Control Card -->
   <div class="col-lg-7">
-    <div class="card h-100 shadow-sm">
+    <div class="card card-bento-panel h-100 shadow-sm">
+      <i class="bi bi-award-fill panel-watermark"></i>
       <div class="card-header d-flex align-items-center justify-content-between">
-        <span><i class="bi bi-award-fill text-brand me-2 fs-5"></i> Active Subscription &amp; 6-Branch Gate Clearance</span>
+        <div class="d-flex align-items-center gap-2">
+          <span class="panel-hdr-ico brand"><i class="bi bi-award-fill"></i></span>
+          <div>
+            <div class="lh-1">Active Subscription &amp; 6-Branch Gate Clearance</div>
+            <small class="text-muted fw-normal" style="font-size:0.71rem;font-family:'Outfit'">Universal Turnstile Access &amp; Billing Status</small>
+          </div>
+        </div>
         <?php if ($c['ms_id'] && $c['eff_status'] === 'active'): ?>
           <span class="badge text-bg-success"><?= $daysLeft ?> Days Remaining</span>
         <?php endif; ?>
       </div>
-      <div class="card-body p-4">
+      <div class="card-body p-4 position-relative" style="z-index:2">
         <div class="access-box <?= $lvl ?> mb-3 shadow-sm">
           <div class="d-flex align-items-center gap-2 fs-6 fw-bold">
             <?= $ok ? '<i class="bi bi-unlock-fill fs-4 text-success"></i> DOOR CLEARANCE GRANTED (Universal 6-Branch Access)' : '<i class="bi bi-lock-fill fs-4 text-danger"></i> DOOR CLEARANCE RESTRICTED / LOCKED' ?>
@@ -184,11 +276,15 @@ page_banner(
 </div>
 
 <!-- 2026 Body Transformation, BMI & InBody Progress Tracker -->
-<div class="card shadow-sm mb-4">
+<div class="card card-bento-panel shadow-sm mb-4">
+  <i class="bi bi-heart-pulse-fill panel-watermark"></i>
   <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
-    <div>
-      <i class="bi bi-heart-pulse-fill text-danger me-2 fs-5"></i>
-      <span>Body Transformation, BMI &amp; Fitness Progress Tracker</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="panel-hdr-ico red"><i class="bi bi-heart-pulse-fill"></i></span>
+      <div>
+        <div class="lh-1">Body Transformation, BMI &amp; Fitness Progress Tracker</div>
+        <small class="text-muted fw-normal" style="font-size:0.71rem;font-family:'Outfit'">InBody Weight, Height, Body Fat % &amp; Muscle Mass Telemetry</small>
+      </div>
       <?php if ($latestMetric): ?>
         <span class="badge text-bg-<?= $bmiColor ?> ms-2">Current: <?= (float) $latestMetric['weight_kg'] ?> kg <?= $latestMetric['bmi'] ? '· BMI ' . $latestMetric['bmi'] . ' (' . $bmiLabel . ')' : '' ?></span>
       <?php endif; ?>
@@ -197,7 +293,7 @@ page_banner(
       <i class="bi bi-plus-circle-fill"></i> Log Weight &amp; Body Check
     </button>
   </div>
-  <div class="card-body">
+  <div class="card-body position-relative" style="z-index:2">
     <?php if ($metrics): ?>
     <div class="row g-3 align-items-center">
       <div class="col-lg-5">
@@ -205,7 +301,7 @@ page_banner(
       </div>
       <div class="col-lg-7">
         <div class="table-responsive">
-          <table class="table table-sm table-hover align-middle mb-0">
+          <table class="table table-hover table-pro-matrix align-middle mb-0">
             <thead>
               <tr><th>Date</th><th>Weight</th><th>Height</th><th>BMI</th><th>Body Fat</th><th>Muscle</th><th>Waist/Chest</th><th></th></tr>
             </thead>
@@ -249,10 +345,19 @@ page_banner(
 <!-- Membership History, Payments & Check-in Logs -->
 <div class="row g-3">
   <div class="col-xl-7">
-    <div class="card mb-3 shadow-sm">
-      <div class="card-header"><i class="bi bi-clock-history text-brand me-2 fs-5"></i> Subscription History</div>
-      <div class="table-responsive">
-        <table class="table table-hover table-sm align-middle mb-0">
+    <div class="card card-bento-panel mb-3 shadow-sm">
+      <i class="bi bi-clock-history panel-watermark"></i>
+      <div class="card-header">
+        <div class="d-flex align-items-center gap-2">
+          <span class="panel-hdr-ico brand"><i class="bi bi-clock-history"></i></span>
+          <div>
+            <div class="lh-1">Subscription History</div>
+            <small class="text-muted fw-normal" style="font-size:0.71rem;font-family:'Outfit'">All Membership Plans Sold or Renewed</small>
+          </div>
+        </div>
+      </div>
+      <div class="table-responsive position-relative" style="z-index:2">
+        <table class="table table-hover table-pro-matrix table-sm align-middle mb-0">
           <thead>
             <tr><th>Plan</th><th>Validity Period</th><th>Facility</th><th>Paid</th><th>Status</th></tr>
           </thead>
@@ -261,7 +366,7 @@ page_banner(
             <tr>
               <td class="fw-semibold"><?= e($h['plan_name']) ?></td>
               <td><?= fmt_date($h['start_date']) ?> &rarr; <?= fmt_date($h['end_date']) ?></td>
-              <td><span class="badge text-bg-secondary"><i class="bi bi-geo-alt"></i> <?= e($h['branch_name']) ?></span></td>
+              <td><span class="badge text-bg-secondary"><i class="bi bi-geo-alt"></i> <?= e(short_branch($h['branch_name'])) ?></span></td>
               <td><?= money($h['amount_paid']) ?> / <?= money($h['price']) ?></td>
               <td><?= badge($h['status'] === 'active' && $h['end_date'] < date('Y-m-d') ? 'expired' : $h['status']) ?></td>
             </tr>
@@ -273,10 +378,20 @@ page_banner(
       </div>
     </div>
 
-    <div class="card shadow-sm">
-      <div class="card-header"><i class="bi bi-receipt-cutoff text-success me-2 fs-5"></i> Official Payment Receipts</div>
-      <div class="table-responsive">
-        <table class="table table-hover table-sm align-middle mb-0">
+    <?php if (Auth::can('payments.view')): ?>
+    <div class="card card-bento-panel shadow-sm">
+      <i class="bi bi-receipt-cutoff panel-watermark"></i>
+      <div class="card-header">
+        <div class="d-flex align-items-center gap-2">
+          <span class="panel-hdr-ico emerald"><i class="bi bi-receipt-cutoff"></i></span>
+          <div>
+            <div class="lh-1">Official Payment Receipts</div>
+            <small class="text-muted fw-normal" style="font-size:0.71rem;font-family:'Outfit'">Verified Transactions &amp; 80mm Thermal Receipts</small>
+          </div>
+        </div>
+      </div>
+      <div class="table-responsive position-relative" style="z-index:2">
+        <table class="table table-hover table-pro-matrix table-sm align-middle mb-0">
           <thead>
             <tr><th>Receipt #</th><th>Date</th><th>Facility</th><th>Method</th><th>Amount</th></tr>
           </thead>
@@ -285,7 +400,7 @@ page_banner(
             <tr>
               <td><a class="fw-semibold font-monospace" href="<?= url('receipt', ['id' => $p['id']]) ?>"><i class="bi bi-file-earmark-text me-1"></i><?= e($p['receipt_no']) ?></a></td>
               <td><small class="text-muted"><?= fmt_dt($p['payment_date']) ?></small></td>
-              <td><?= e($p['branch']) ?></td>
+              <td><?= e(short_branch($p['branch'])) ?></td>
               <td><span class="badge text-bg-light border"><?= e($p['method']) ?></span></td>
               <td class="fw-bold text-brand"><?= money($p['amount']) ?></td>
             </tr>
@@ -296,13 +411,23 @@ page_banner(
         </table>
       </div>
     </div>
+    <?php endif; ?>
   </div>
 
   <div class="col-xl-5">
-    <div class="card h-100 shadow-sm">
-      <div class="card-header"><i class="bi bi-fingerprint text-info me-2 fs-5"></i> Door Check-in Log (All 6 Branches)</div>
-      <div class="table-responsive">
-        <table class="table table-hover table-sm mb-0 align-middle">
+    <div class="card card-bento-panel h-100 shadow-sm">
+      <i class="bi bi-fingerprint panel-watermark"></i>
+      <div class="card-header">
+        <div class="d-flex align-items-center gap-2">
+          <span class="panel-hdr-ico cyan"><i class="bi bi-fingerprint"></i></span>
+          <div>
+            <div class="lh-1">Door Check-in Log (All 6 Branches)</div>
+            <small class="text-muted fw-normal" style="font-size:0.71rem;font-family:'Outfit'">Cross-Facility Biometric &amp; QR Entries</small>
+          </div>
+        </div>
+      </div>
+      <div class="table-responsive position-relative" style="z-index:2">
+        <table class="table table-hover table-pro-matrix table-sm mb-0 align-middle">
           <thead>
             <tr><th>Timestamp</th><th>Method</th><th>Facility</th></tr>
           </thead>
@@ -317,7 +442,7 @@ page_banner(
                   <span class="badge text-bg-info"><i class="bi bi-qr-code-scan"></i> QR/Desk</span>
                 <?php endif; ?>
               </td>
-              <td><i class="bi bi-geo-alt-fill text-danger me-1"></i> <?= e($a['branch']) ?></td>
+              <td><i class="bi bi-geo-alt-fill text-danger me-1"></i> <?= e(short_branch($a['branch'])) ?></td>
             </tr>
           <?php endforeach; if (!$att): ?>
             <tr><td colspan="3" class="text-muted p-4 text-center"><i class="bi bi-door-closed fs-3 d-block mb-1"></i> No check-ins recorded yet.</td></tr>
@@ -375,6 +500,51 @@ page_banner(
       </div>
       <div class="modal-footer">
         <button class="btn btn-brand"><i class="bi bi-check2-circle"></i> Save Body Check &amp; Calculate BMI</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Coach, Fitness Goal & Training Notes Modal -->
+<div class="modal fade" id="coachModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content shadow-lg" method="post">
+      <?= csrf_field() ?>
+      <input type="hidden" name="action" value="update_coaching">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-trophy-fill text-warning me-2 fs-5"></i> Athlete Coaching &amp; Fitness Goal</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body row g-3">
+        <div class="col-12">
+          <label class="form-label small fw-semibold">Primary Fitness Objective *</label>
+          <select name="fitness_goal" class="form-select">
+            <?php
+            $goalsList = ['General Fitness', 'Weight Loss & Fat Burn', 'Muscle Gain & Hypertrophy', 'Strength & Powerlifting', 'Boxing & Combat Conditioning', 'Cardio & Endurance', 'Rehab & Mobility'];
+            $curGoal = $c['fitness_goal'] ?? 'General Fitness';
+            foreach ($goalsList as $gl): ?>
+              <option value="<?= e($gl) ?>" <?= $curGoal === $gl ? 'selected' : '' ?>><?= e($gl) ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="col-12">
+          <label class="form-label small fw-semibold">Assigned Personal Coach / Trainer</label>
+          <select name="assigned_trainer_id" class="form-select">
+            <option value="">— Self-Guided / Floor Coach —</option>
+            <?php foreach (($trainers ?? []) as $tr): ?>
+              <option value="<?= $tr['id'] ?>" <?= (int) ($c['assigned_trainer_id'] ?? 0) === (int) $tr['id'] ? 'selected' : '' ?>>
+                <?= e($tr['full_name']) ?><?= $tr['specialization'] ? ' (' . e($tr['specialization']) . ')' : '' ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="col-12">
+          <label class="form-label small fw-semibold">Medical, Injury or Coaching Notes</label>
+          <textarea name="medical_notes" class="form-control" rows="3" placeholder="Any knee/back precautions, dietary notes or training plan..."><?= e($c['medical_notes'] ?? '') ?></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-brand"><i class="bi bi-check2-circle"></i> Save Coaching Profile</button>
       </div>
     </form>
   </div>

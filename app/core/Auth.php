@@ -11,6 +11,18 @@ final class Auth
                 return;
             }
             $_SESSION['last'] = time();
+            // Keep role permissions & branch metadata synchronized in real-time
+            if (isset($_SESSION['user']['id'])) {
+                $uRow = DB::one('SELECT u.role_id, b.name AS branch_name, b.code AS branch_code FROM users u LEFT JOIN branches b ON b.id=u.branch_id WHERE u.id=?', [$_SESSION['user']['id']]);
+                if ($uRow) {
+                    $_SESSION['user']['branch_name'] = $uRow['branch_name'];
+                    $_SESSION['user']['branch_code'] = $uRow['branch_code'];
+                    if (!self::isSuper() && $uRow['role_id']) {
+                        $_SESSION['perms'] = array_column(DB::all(
+                            "SELECT p.perm_key FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE rp.role_id=?", [$uRow['role_id']]), 'perm_key');
+                    }
+                }
+            }
         }
     }
     public static function check(): bool { return !empty($_SESSION['user']); }
@@ -47,7 +59,7 @@ final class Auth
 
     public static function login(string $username, string $password): array
     {
-        $u = DB::one("SELECT u.*, r.name AS role_name, b.name AS branch_name, b.status AS branch_status
+        $u = DB::one("SELECT u.*, r.name AS role_name, b.name AS branch_name, b.code AS branch_code, b.status AS branch_status
                       FROM users u JOIN roles r ON r.id=u.role_id LEFT JOIN branches b ON b.id=u.branch_id
                       WHERE u.username=? LIMIT 1", [$username]);
         if (!$u) { password_verify($password, '$2y$10$abcdefghijklmnopqrstuuG3yZ8mW9q4a7nH5Yl3m0b9O1kqj8y6a'); return [false, 'Invalid username or password.']; }
@@ -63,10 +75,11 @@ final class Auth
             return [false, 'Your branch is inactive or not assigned. Contact the Super Admin.'];
 
         DB::update('users', ['failed_attempts' => 0, 'locked_until' => null, 'last_login' => date('Y-m-d H:i:s')], 'id=?', [$u['id']]);
-        session_regenerate_id(true);
+        if (!headers_sent()) session_regenerate_id(true);
         $_SESSION['user'] = [
             'id' => (int) $u['id'], 'name' => $u['full_name'], 'username' => $u['username'],
             'role' => $u['role_name'], 'branch_id' => $u['branch_id'], 'branch_name' => $u['branch_name'],
+            'branch_code' => $u['branch_code'] ?? null,
         ];
         $_SESSION['perms'] = array_column(DB::all(
             "SELECT p.perm_key FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE rp.role_id=?", [$u['role_id']]), 'perm_key');
@@ -79,6 +92,6 @@ final class Auth
     {
         if (self::check()) audit('logout', 'user', self::id(), 'Signed out');
         $_SESSION = [];
-        session_regenerate_id(true);
+        if (!headers_sent()) session_regenerate_id(true);
     }
 }

@@ -13,14 +13,29 @@ page_banner(
 ?>
 
 <?php if (!empty($catBreakdown)): ?>
-<div class="row g-2 mb-4">
-<?php foreach ($catBreakdown as $cb): ?>
+<div class="row g-3 mb-4">
+<?php
+$expThemes = ['amber', 'red', 'violet', 'cyan', 'brand', 'emerald'];
+foreach ($catBreakdown as $idx => $cb):
+  $th = $expThemes[$idx % count($expThemes)];
+  $pct = $total > 0 ? min(100, max(12, (int) round(($cb['total'] / $total) * 100))) : 40;
+?>
   <div class="col-6 col-md-4 col-xl-2">
-    <div class="card stat amber py-2 px-3">
-      <div class="ico" style="width:44px;height:44px;font-size:1.3rem!important"><i class="bi bi-pie-chart-fill"></i></div>
-      <div class="overflow-hidden">
-        <div class="num fs-5"><?= money($cb['total']) ?></div>
-        <small class="text-truncate" style="font-size:0.7rem"><?= e($cb['category']) ?> (<?= (int)$cb['cnt'] ?>)</small>
+    <div class="card stat stat-pro <?= $th ?> h-100">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-pie-chart-fill stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico" style="width:42px;height:42px;font-size:1.15rem!important"><i class="bi bi-pie-chart-fill"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> <?= (int) $cb['cnt'] ?>x</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num fs-4"><?= money($cb['total']) ?></div>
+        <div class="stat-title text-truncate"><?= e($cb['category']) ?></div>
+      </div>
+      <div class="stat-foot">
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:<?= $pct ?>%"></div></div>
       </div>
     </div>
   </div>
@@ -28,9 +43,13 @@ page_banner(
 </div>
 <?php endif; ?>
 
-<div class="card mb-4 shadow-sm">
-  <div class="card-header"><i class="bi bi-plus-circle-fill text-brand me-2 fs-5"></i> Record New Facility Expense</div>
-  <div class="card-body p-3 bg-body-tertiary">
+<div class="card card-bento-panel mb-4 shadow-sm">
+  <i class="bi bi-plus-circle-fill panel-watermark"></i>
+  <div class="card-header d-flex align-items-center gap-2">
+    <span class="panel-hdr-ico brand"><i class="bi bi-plus-circle-fill"></i></span>
+    <span>Record New Facility Expense</span>
+  </div>
+  <div class="card-body p-3 position-relative" style="z-index:1">
     <form class="row g-2 align-items-end" method="post">
       <?= csrf_field() ?>
       <input type="hidden" name="action" value="add">
@@ -40,6 +59,13 @@ page_banner(
         <select name="branch_id" class="form-select" required>
           <?= opts($branches, '', 'id', 'name', 'Facility…') ?>
         </select>
+      </div>
+      <?php else: ?>
+      <div class="col-md-2">
+        <label class="form-label small fw-semibold text-muted text-uppercase">Branch</label>
+        <div class="form-control bg-body-secondary fw-semibold text-truncate">
+          <i class="bi bi-geo-alt-fill text-danger me-1"></i> <?= e(short_branch(Auth::user()['branch_name'] ?? '')) ?>
+        </div>
       </div>
       <?php endif; ?>
       <div class="col-md-2">
@@ -73,10 +99,11 @@ page_banner(
   </div>
 </div>
 
-<div class="card shadow-sm">
+<div class="card card-bento-panel shadow-sm">
+  <i class="bi bi-receipt-cutoff panel-watermark"></i>
   <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
-    <div>
-      <i class="bi bi-receipt-cutoff text-brand me-2 fs-5"></i>
+    <div class="d-flex align-items-center gap-2">
+      <span class="panel-hdr-ico amber"><i class="bi bi-receipt-cutoff"></i></span>
       <span>Expense Ledger</span>
       <span class="badge text-bg-danger ms-2"><i class="bi bi-cash-stack me-1"></i> Period Total: <?= money($total) ?></span>
     </div>
@@ -93,7 +120,7 @@ page_banner(
     </form>
   </div>
   <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
+    <table class="table table-hover table-pro-matrix align-middle mb-0">
       <thead>
         <tr>
           <th>Date</th>
@@ -109,7 +136,7 @@ page_banner(
       <?php foreach ($rows as $r): ?>
         <tr>
           <td><small class="text-muted"><i class="bi bi-calendar3 me-1"></i><?= fmt_date($r['expense_date']) ?></small></td>
-          <td><i class="bi bi-geo-alt-fill text-danger me-1"></i><?= e($r['branch_name']) ?></td>
+          <td><span class="gate-visit-pill"><i class="bi bi-geo-alt-fill text-danger"></i> <?= e(short_branch($r['branch_name'])) ?></span></td>
           <td><span class="badge text-bg-light border"><?= e($r['category']) ?></span></td>
           <td><?= e($r['description'] ?: '—') ?></td>
           <td class="fw-bold text-danger fs-6"><?= money($r['amount']) ?></td>

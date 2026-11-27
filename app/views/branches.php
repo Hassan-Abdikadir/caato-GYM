@@ -1,6 +1,7 @@
 <?php
 $totBrRev = array_sum(array_map(fn($x) => (float) $x['revenue_month'], $stats));
 $totBrAct = array_sum(array_map(fn($x) => (int) $x['active_members'], $stats));
+$totBrVis = array_sum(array_map(fn($x) => (int) $x['attendance_today'], $stats));
 page_banner(
   'CENTRALIZED ENTERPRISE NODES · 6 UNIFIED FACILITIES',
   '6-Branch',
@@ -15,27 +16,104 @@ page_banner(
 );
 ?>
 
-<!-- 2026 Bento Branch Node Cards -->
+<!-- 3D Holographic Network KPI Strip -->
 <div class="row g-3 mb-4">
-<?php foreach ($stats as $s): $x = $ex[$s['id']] ?? []; ?>
+  <div class="col-md-4">
+    <div class="card stat stat-pro brand">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-diagram-3-fill stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-diagram-3-fill"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> Cloud Sync</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= count($stats) ?> Facilities</div>
+        <div class="stat-title">UNIFIED BRANCH NETWORK</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-fingerprint"></i> Single membership valid at all gates</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:100%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat stat-pro emerald">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-people-fill stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-people-fill"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> Network Pass</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= (int) $totBrAct ?> Active · <?= (int) $totBrVis ?> Today</div>
+        <div class="stat-title">ACTIVE MEMBERS &amp; TODAY TRAFFIC</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-activity"></i> Live cross-branch door check-ins</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:86%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat stat-pro cyan">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-cash-stack stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-cash-stack"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> <?= date('M Y') ?></span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= money($totBrRev) ?></div>
+        <div class="stat-title">COMBINED MONTHLY REVENUE</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-shield-check"></i> Verified across all 6 facility ledgers</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:92%"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2026 3D Holographic Bento Branch Node Cards -->
+<div class="row g-3 mb-4">
+<?php
+$brThemes = ['brand', 'emerald', 'cyan', 'violet', 'amber', 'green'];
+foreach ($stats as $idx => $s):
+  $x = $ex[$s['id']] ?? [];
+  $th = $s['status'] === 'active' ? $brThemes[$idx % count($brThemes)] : 'red';
+  $revPct = $totBrRev > 0 ? min(100, max(16, (int) round(($s['revenue_month'] / $totBrRev) * 100))) : 55;
+?>
   <div class="col-md-6 col-xl-4">
-    <div class="card h-100 shadow-sm" style="border-top:4px solid <?= $s['status'] === 'active' ? '#ff5722' : '#64748b' ?>">
-      <div class="card-body p-4 d-flex flex-column">
-        <div class="d-flex justify-content-between align-items-start mb-2">
+    <div class="card stat stat-pro <?= $th ?> h-100">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-building-fill-check stat-watermark"></i>
+      <div class="stat-top">
+        <div class="d-flex align-items-center gap-2">
+          <div class="ico"><i class="bi bi-building"></i></div>
           <div>
             <span class="badge text-bg-dark font-monospace mb-1"><?= e($s['code']) ?></span>
-            <h5 class="fw-bold mb-0"><?= e($s['name']) ?></h5>
+            <h5 class="fw-bold mb-0"><?= e(short_branch($s['name'])) ?></h5>
           </div>
+        </div>
+        <div class="stat-meta-right">
           <?= badge($s['status']) ?>
         </div>
+      </div>
 
+      <div class="stat-body my-1">
         <div class="small text-muted mb-3">
-          <div><i class="bi bi-person-badge me-1 text-brand"></i> Manager: <strong><?= e($s['manager'] ?: 'Unassigned') ?></strong></div>
-          <?php if (!empty($x['address'])): ?><div><i class="bi bi-geo-alt me-1 text-danger"></i> <?= e($x['address']) ?></div><?php endif; ?>
-          <?php if (!empty($x['phone'])): ?><div><i class="bi bi-telephone me-1"></i> <?= e($x['phone']) ?></div><?php endif; ?>
+          <div class="mb-1"><i class="bi bi-person-badge-fill me-1 text-brand"></i> Manager: <strong class="text-body"><?= e($s['manager'] ?: 'Unassigned') ?></strong></div>
+          <?php if (!empty($x['address'])): ?><div class="text-truncate"><i class="bi bi-geo-alt-fill me-1 text-danger"></i> <?= e($x['address']) ?></div><?php endif; ?>
+          <?php if (!empty($x['phone'])): ?><div><i class="bi bi-telephone-fill me-1 text-info"></i> <?= e($x['phone']) ?></div><?php endif; ?>
         </div>
 
-        <div class="row g-2 text-center mb-3">
+        <div class="row g-2 text-center">
           <div class="col-4">
             <div class="p-2 rounded-3 bg-body-tertiary border">
               <div class="fw-bold fs-5 text-success"><?= (int) $s['active_members'] ?></div>
@@ -55,8 +133,11 @@ page_banner(
             </div>
           </div>
         </div>
+      </div>
 
-        <div class="mt-auto d-flex flex-wrap gap-1">
+      <div class="stat-foot mt-auto">
+        <div class="stat-spark mb-2"><div class="stat-spark-fill" style="width:<?= $revPct ?>%"></div></div>
+        <div class="d-flex flex-wrap gap-1">
           <a class="btn btn-sm btn-outline-brand flex-grow-1" href="<?= url('dashboard', ['branch' => $s['id']]) ?>">
             <i class="bi bi-speedometer2"></i> Console
           </a>

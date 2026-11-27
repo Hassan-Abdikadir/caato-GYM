@@ -330,28 +330,32 @@ INSERT INTO permissions (perm_key,label) VALUES
  ('payments.view','View payments'),('payments.create','Record payments'),('expenses.manage','Manage expenses'),
  ('attendance.view','View attendance'),('attendance.checkin','Check customers in'),
  ('employees.manage','Manage employees'),('trainers.view','View trainers'),('trainers.manage','Manage trainers'),
+ ('classes.view','View workout classes'),('classes.manage','Manage workout classes'),
+ ('equipment.view','View gym equipment'),('equipment.manage','Manage gym equipment'),
+ ('pos.view','View POS & Supplement Bar'),('pos.create','Sell POS Bar items'),('pos.manage','Manage POS inventory & stock'),
  ('reports.view','View & export reports'),('settings.manage','System settings'),('users.manage','Manage users');
 
 -- Super admin: everything (also hard-coded in code)
 INSERT INTO role_permissions SELECT r.id,p.id FROM roles r, permissions p WHERE r.name='super_admin';
 INSERT INTO role_permissions SELECT r.id,p.id FROM roles r JOIN permissions p ON p.perm_key IN
  ('dashboard.view','customers.view','customers.create','customers.edit','memberships.view','memberships.renew','memberships.manage',
-  'payments.view','payments.create','expenses.manage','attendance.view','attendance.checkin','employees.manage','trainers.view','trainers.manage','reports.view')
+  'payments.view','payments.create','expenses.manage','attendance.view','attendance.checkin','employees.manage','trainers.view','trainers.manage',
+  'classes.view','classes.manage','equipment.view','equipment.manage','pos.view','pos.create','pos.manage','reports.view')
  WHERE r.name='branch_manager';
 INSERT INTO role_permissions SELECT r.id,p.id FROM roles r JOIN permissions p ON p.perm_key IN
  ('dashboard.view','customers.view','customers.create','customers.edit','memberships.view','memberships.renew',
-  'payments.view','payments.create','attendance.view','attendance.checkin','trainers.view')
+  'payments.view','payments.create','attendance.view','attendance.checkin','trainers.view','classes.view','pos.view','pos.create')
  WHERE r.name='receptionist';
 INSERT INTO role_permissions SELECT r.id,p.id FROM roles r JOIN permissions p ON p.perm_key IN
- ('dashboard.view','customers.view','memberships.view','payments.view','payments.create','expenses.manage','reports.view')
+ ('dashboard.view','customers.view','memberships.view','payments.view','payments.create','expenses.manage','pos.view','reports.view')
  WHERE r.name='accountant';
 INSERT INTO role_permissions SELECT r.id,p.id FROM roles r JOIN permissions p ON p.perm_key IN
- ('dashboard.view','customers.view','memberships.view','attendance.view','trainers.view')
+ ('dashboard.view','customers.view','memberships.view','attendance.view','trainers.view','classes.view','equipment.view')
  WHERE r.name='trainer';
 
 INSERT INTO branches (code,name) VALUES
- ('B1','CAATO FITNESS GYM – Branch 1'),('B2','CAATO FITNESS GYM – Branch 2'),('B3','CAATO FITNESS GYM – Branch 3'),
- ('B4','CAATO FITNESS GYM – Branch 4'),('B5','CAATO FITNESS GYM – Branch 5'),('B6','CAATO FITNESS GYM – Branch 6');
+ ('B1','CAATO FITNESS GYM - Branch 1'),('B2','CAATO FITNESS GYM - Branch 2'),('B3','CAATO FITNESS GYM - Branch 3'),
+ ('B4','CAATO FITNESS GYM - Branch 4'),('B5','CAATO FITNESS GYM - Branch 5'),('B6','CAATO FITNESS GYM - Branch 6');
 
 -- Starter prices: the Super Admin can change these any time (Memberships > Plans)
 INSERT INTO membership_plans (name,type,duration_days,price) VALUES

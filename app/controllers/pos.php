@@ -1,12 +1,12 @@
 <?php
-Auth::need('payments.view');
+Auth::need('pos.view');
 $methods = DB::all("SELECT * FROM payment_methods WHERE status='active' ORDER BY id");
 
 if (is_post()) {
     try {
         $a = req('action');
         if ($a === 'sell') {
-            Auth::need('payments.create');
+            Auth::need('pos.create');
             $pid = (int) req('product_id');
             $qty = max(1, (int) req('qty', 1));
             $methodId = (int) req('method_id');
@@ -40,7 +40,7 @@ if (is_post()) {
             });
             flash('success', "POS Sale recorded: {$qty}x {$prod['name']} (" . money($total) . ').');
         } elseif ($a === 'save_product') {
-            Auth::need('plans.manage');
+            Auth::need('pos.manage');
             $id = (int) req('id');
             $name = req('name');
             $cat = req('category', 'Supplements');
@@ -58,10 +58,13 @@ if (is_post()) {
             audit('pos_product_save', 'pos_product', $id, "$name @ $price");
             flash('success', 'POS Product inventory saved.');
         } elseif ($a === 'delete_sale') {
-            Auth::need('plans.manage');
+            Auth::need('pos.manage');
             $sid = (int) req('id');
             $s = DB::one('SELECT * FROM pos_sales WHERE id=?', [$sid]);
             if ($s) {
+                if (!Auth::isSuper() && (int) $s['branch_id'] !== (int) Auth::branchId()) {
+                    throw new RuntimeException('You can only void POS sales from your own branch.');
+                }
                 DB::exec('UPDATE pos_products SET stock_qty = stock_qty + ? WHERE id=?', [$s['qty'], $s['product_id']]);
                 DB::exec('DELETE FROM pos_sales WHERE id=?', [$sid]);
                 flash('success', 'POS sale voided and stock restored.');

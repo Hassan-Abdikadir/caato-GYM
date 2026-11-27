@@ -1,9 +1,9 @@
 <?php
-Auth::need('dashboard.view');
-$canManage = Auth::isSuper() || Auth::can('expenses.manage') || Auth::can('employees.manage');
+Auth::need('equipment.view');
+$canManage = Auth::can('equipment.manage');
 
 if (is_post()) {
-    if (!$canManage) { http_response_code(403); render('errors/403'); exit; }
+    Auth::need('equipment.manage');
     try {
         $a = req('action');
         $id = (int) req('id');

@@ -234,6 +234,48 @@ final class DB
                     }
                 }
             }
+            // 7. Auto-sync granular RBAC permissions for all 5 roles
+            $newPerms = [
+                ['classes.view', 'View workout classes'],
+                ['classes.manage', 'Manage workout classes'],
+                ['equipment.view', 'View gym equipment'],
+                ['equipment.manage', 'Manage gym equipment'],
+                ['pos.view', 'View POS & Supplement Bar'],
+                ['pos.create', 'Sell POS Bar items'],
+                ['pos.manage', 'Manage POS inventory & stock'],
+            ];
+            foreach ($newPerms as [$pk, $pl]) {
+                self::q("INSERT IGNORE INTO permissions (perm_key, label) VALUES (?, ?)", [$pk, $pl]);
+            }
+            $roleMap = [
+                'branch_manager' => ['classes.view', 'classes.manage', 'equipment.view', 'equipment.manage', 'pos.view', 'pos.create', 'pos.manage'],
+                'receptionist'   => ['classes.view', 'pos.view', 'pos.create'],
+                'accountant'     => ['pos.view'],
+                'trainer'        => ['classes.view', 'equipment.view'],
+            ];
+            foreach ($roleMap as $rName => $pKeys) {
+                $rid = (int) self::val("SELECT id FROM roles WHERE name=?", [$rName]);
+                if ($rid) {
+                    foreach ($pKeys as $pk) {
+                        $pid = (int) self::val("SELECT id FROM permissions WHERE perm_key=?", [$pk]);
+                        if ($pid) self::q("INSERT IGNORE INTO role_permissions (role_id, permission_id) VALUES (?, ?)", [$rid, $pid]);
+                    }
+                }
+            }
+            $saId = (int) self::val("SELECT id FROM roles WHERE name='super_admin'");
+            if ($saId) {
+                self::pdo()->exec("INSERT IGNORE INTO role_permissions SELECT $saId, id FROM permissions");
+            }
+
+            // 8. Sanitize any corrupted UTF-8 / CP850 dash characters in branch names
+            foreach (self::all("SELECT id, code, name FROM branches") as $brRow) {
+                if (preg_match('/Branch\s*(\d+)/i', $brRow['name'], $m)) {
+                    $cleanName = 'CAATO FITNESS GYM - Branch ' . $m[1];
+                    if ($brRow['name'] !== $cleanName && strpos($brRow['name'], 'CAATO FITNESS GYM') === 0) {
+                        self::update('branches', ['name' => $cleanName], 'id=?', [$brRow['id']]);
+                    }
+                }
+            }
         } catch (Throwable $e) {
             // Gracefully ignore migration errors if DB is uninitialized
         }

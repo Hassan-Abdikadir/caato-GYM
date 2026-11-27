@@ -3,6 +3,7 @@ $msActs = ($tab === 'plans' && Auth::can('plans.manage'))
   ? '<button class="btn btn-brand btn-sm px-3 py-2" onclick="planForm()"><i class="bi bi-plus-circle-fill"></i> Create New Plan Tier</button>'
   : (Auth::can('customers.create') ? '<a href="' . url('customer_register') . '" class="btn btn-brand btn-sm px-3 py-2"><i class="bi bi-person-plus-fill"></i> Sell New Membership</a>' : '');
 $activePlansCnt = count(array_filter($plans, fn($x) => $x['status'] === 'active'));
+$totalActiveSubs = array_sum(array_map(fn($x) => (int) ($x['active_count'] ?? 0), $plans));
 page_banner(
   'SUBSCRIPTION ENGINE · 6-BRANCH UNIVERSAL PASSES',
   'Memberships &amp;',
@@ -11,10 +12,74 @@ page_banner(
   $msActs,
   [
     [$activePlansCnt, 'Active Plans', 'warning'],
-    [(int) ($pg['total'] ?? 0), 'Subscriptions', 'info'],
+    [(int) ($pg['total'] ?? $totalActiveSubs), 'Subscriptions', 'info'],
   ]
 );
 ?>
+
+<!-- 3D Holographic KPI Summary Strip -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card stat stat-pro brand">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-tags-fill stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-tags-fill"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> Pricing Engine</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= $activePlansCnt ?> / <?= count($plans) ?></div>
+        <div class="stat-title">ACTIVE PRICING TIERS</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-diagram-3-fill"></i> Universal 6-branch pass plans</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:92%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat stat-pro emerald">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-patch-check-fill stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-patch-check-fill"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> Verified Passes</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= (int) $totalActiveSubs ?></div>
+        <div class="stat-title">ACTIVE SUBSCRIBERS</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-fingerprint"></i> Authorized for biometric gate access</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:86%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat stat-pro cyan">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-card-checklist stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-card-checklist"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> Cloud Registry</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= (int) ($pg['total'] ?? count($rows)) ?></div>
+        <div class="stat-title">FILTERED SUBSCRIPTIONS</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-clock-history"></i> Full lifecycle &amp; renewal tracking</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:100%"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <ul class="nav nav-tabs mb-4">
   <li class="nav-item">
@@ -30,29 +95,46 @@ page_banner(
 </ul>
 
 <?php if ($tab === 'plans'): ?>
-<!-- 2026 Bento Pricing Tier Cards -->
+<!-- 2026 3D Holographic Bento Pricing Tier Cards -->
 <div class="row g-3 mb-4">
-<?php foreach ($plans as $p): ?>
+<?php
+$tierThemes = ['brand', 'emerald', 'cyan', 'violet', 'amber', 'red'];
+$tierIcons  = ['daily' => 'bi-lightning-charge-fill', 'weekly' => 'bi-calendar-week-fill', 'monthly' => 'bi-gem', 'quarterly' => 'bi-trophy-fill', 'semiannual' => 'bi-award-fill', 'annual' => 'bi-stars'];
+foreach ($plans as $idx => $p):
+  $th = $p['status'] === 'active' ? $tierThemes[$idx % count($tierThemes)] : 'red';
+  $tIcon = $tierIcons[$p['type']] ?? 'bi-patch-check-fill';
+  $subCnt = (int) ($p['active_count'] ?? 0);
+  $subPct = $totalActiveSubs > 0 ? min(100, max(16, (int) round(($subCnt / $totalActiveSubs) * 100))) : 35;
+?>
   <div class="col-md-6 col-xl-4">
-    <div class="card h-100 shadow-sm position-relative" style="border-top:4px solid <?= $p['status'] === 'active' ? '#ff5722' : '#64748b' ?>">
-      <div class="card-body p-4 d-flex flex-column">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-          <div>
-            <span class="badge text-bg-light border text-uppercase mb-1"><?= e($p['type']) ?></span>
-            <h4 class="fw-bold mb-0"><?= e($p['name']) ?></h4>
-          </div>
+    <div class="card stat stat-pro <?= $th ?> h-100">
+      <div class="stat-glow-orb"></div>
+      <i class="bi <?= $tIcon ?> stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi <?= $tIcon ?>"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> <?= strtoupper(e($p['type'])) ?> · <?= (int) $p['duration_days'] ?>D</span>
           <?= badge($p['status']) ?>
         </div>
-        <div class="my-3">
-          <span class="display-5 fw-bold text-brand" style="font-family:'Barlow Condensed'"><?= money($p['price']) ?></span>
-          <span class="text-muted small">/ <?= (int) $p['duration_days'] ?> days</span>
+      </div>
+
+      <div class="stat-body my-2">
+        <div class="d-flex align-items-baseline justify-content-between flex-wrap gap-2">
+          <div>
+            <div class="stat-title mb-1"><?= e($p['name']) ?></div>
+            <div class="num"><?= money($p['price']) ?> <small class="text-muted fw-normal" style="font-size:0.85rem">/ <?= (int) $p['duration_days'] ?> days</small></div>
+          </div>
         </div>
-        <div class="p-2 px-3 rounded-3 bg-body-tertiary border small d-flex justify-content-between align-items-center mb-3">
-          <span class="text-muted"><i class="bi bi-people-fill me-1"></i> Active Subscribers</span>
-          <strong class="text-success"><?= (int) ($p['active_count'] ?? 0) ?> members</strong>
+      </div>
+
+      <div class="stat-foot mt-auto">
+        <div class="d-flex justify-content-between align-items-center w-100">
+          <span class="stat-sub"><i class="bi bi-people-fill"></i> Active Subscribers</span>
+          <strong class="text-success small"><?= $subCnt ?> members</strong>
         </div>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:<?= $subPct ?>%"></div></div>
         <?php if (Auth::can('plans.manage')): ?>
-        <div class="mt-auto d-flex gap-2">
+        <div class="d-flex gap-2 mt-2 pt-1">
           <button class="btn btn-sm btn-outline-brand flex-grow-1" onclick="planForm(<?= jsattr($p) ?>)">
             <i class="bi bi-pencil-square"></i> Edit Price / Days
           </button>
@@ -60,7 +142,7 @@ page_banner(
             <?= csrf_field() ?>
             <input type="hidden" name="action" value="toggle_plan">
             <input type="hidden" name="id" value="<?= $p['id'] ?>">
-            <button class="btn btn-sm btn-outline-danger" data-confirm="Change the status of the <?= e($p['name']) ?> plan?">
+            <button class="btn btn-sm btn-outline-danger" data-confirm="Change the status of the <?= e($p['name']) ?> plan?" title="Toggle Active/Inactive">
               <?= $p['status'] === 'active' ? '<i class="bi bi-slash-circle"></i>' : '<i class="bi bi-check-circle"></i>' ?>
             </button>
           </form>
@@ -128,8 +210,10 @@ function planForm(p){
 
 <?php else: ?>
 
-<div class="card mb-4 shadow-sm">
-  <div class="card-body p-3 bg-body-tertiary">
+<!-- 3D Bento Filter Bar -->
+<div class="card card-bento-panel mb-4 shadow-sm">
+  <i class="bi bi-funnel-fill panel-watermark"></i>
+  <div class="card-body p-3 position-relative" style="z-index:1">
     <form class="row g-2 align-items-center" method="get">
       <input type="hidden" name="page" value="memberships">
       <div class="col-md-3">
@@ -165,6 +249,12 @@ function planForm(p){
           <?= opts(branch_list(false), $br, 'id', 'name', 'Facility: All') ?>
         </select>
       </div>
+      <?php else: ?>
+      <div class="col-md-2">
+        <div class="form-control form-control-sm bg-body-secondary fw-semibold text-truncate">
+          <i class="bi bi-geo-alt-fill text-danger me-1"></i> <?= e(short_branch(Auth::user()['branch_name'] ?? '')) ?>
+        </div>
+      </div>
       <?php endif; ?>
       <div class="col-md-1 d-grid">
         <button class="btn btn-sm btn-brand" title="Filter"><i class="bi bi-funnel-fill"></i></button>
@@ -173,9 +263,18 @@ function planForm(p){
   </div>
 </div>
 
-<div class="card shadow-sm">
+<!-- 3D Bento Subscriptions Matrix -->
+<div class="card card-bento-panel shadow-sm">
+  <i class="bi bi-card-checklist panel-watermark"></i>
+  <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <div class="d-flex align-items-center gap-2">
+      <span class="panel-hdr-ico brand"><i class="bi bi-card-checklist"></i></span>
+      <span>Active &amp; Historical Subscriptions Matrix</span>
+    </div>
+    <span class="stat-pill"><span class="stat-dot"></span> <?= (int) ($pg['total'] ?? count($rows)) ?> Records</span>
+  </div>
   <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
+    <table class="table table-hover table-pro-matrix align-middle mb-0">
       <thead>
         <tr>
           <th>Customer Profile</th>
@@ -203,15 +302,18 @@ function planForm(p){
               </div>
             </div>
           </td>
-          <td><span class="badge text-bg-light border fw-semibold"><?= e($r['plan_name']) ?></span></td>
+          <td><span class="badge text-bg-light border fw-semibold"><i class="bi bi-tag-fill text-brand me-1"></i><?= e($r['plan_name']) ?></span></td>
           <td>
             <small class="d-block fw-semibold"><i class="bi bi-calendar3 me-1"></i><?= fmt_date($r['start_date']) ?> &rarr; <?= fmt_date($r['end_date']) ?></small>
             <?php if ($r['eff'] === 'active'): ?>
-              <small class="text-success fw-bold"><?= $dLeft ?> days remaining</small>
+              <small class="text-success fw-bold"><i class="bi bi-hourglass-split"></i> <?= $dLeft ?> days remaining</small>
             <?php endif; ?>
           </td>
-          <td><i class="bi bi-geo-alt-fill text-danger me-1"></i><?= e(str_replace('CAATO FITNESS GYM – ', '', $r['branch_name'])) ?></td>
-          <td><span class="fw-semibold"><?= money($r['amount_paid']) ?></span> / <?= money($r['price']) ?></td>
+          <td><span class="gate-visit-pill"><i class="bi bi-geo-alt-fill text-danger"></i> <?= e(short_branch($r['branch_name'])) ?></span></td>
+          <td>
+            <span class="matrix-rev-month"><?= money($r['amount_paid']) ?></span>
+            <span class="text-muted small"> / <?= money($r['price']) ?></span>
+          </td>
           <td><?= badge($r['payment_status']) ?></td>
           <td><?= badge($r['eff']) ?></td>
           <td class="text-end text-nowrap">

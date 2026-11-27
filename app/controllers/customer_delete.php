@@ -1,5 +1,5 @@
 <?php
-Auth::need('customers.edit');
+Auth::need('memberships.manage');
 if (!is_post()) redirect('customers');
 $id = (int) req('id');
 $c = DB::one('SELECT id, full_name, customer_code FROM customers WHERE id=?', [$id]);

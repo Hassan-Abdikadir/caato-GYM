@@ -1,6 +1,7 @@
 <?php
 $notifActs = '<form method="post" class="d-inline">' . csrf_field() . '<button class="btn btn-brand btn-sm px-3 py-2"><i class="bi bi-check2-all"></i> Mark All Read</button></form>'
   . '<form method="post" class="d-inline">' . csrf_field() . '<input type="hidden" name="action" value="clear_read"><button class="btn btn-sm px-3 py-2" style="background:rgba(225,29,72,0.2);color:#fda4af;border:1px solid rgba(225,29,72,0.4)" data-confirm="Clear all read notifications?"><i class="bi bi-trash3"></i> Clear Read</button></form>';
+$unreadPageCnt = count(array_filter($rows, fn($x) => empty($x['is_read'])));
 page_banner(
   'REALTIME ALERTS · EXPIRY & PAYMENT TELEMETRY',
   'Notification',
@@ -13,14 +14,78 @@ page_banner(
 );
 ?>
 
+<!-- 3D Holographic Alert KPI Strip -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card stat stat-pro brand">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-bell-fill stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-bell-fill"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> Telemetry Stream</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= (int) ($pg['total'] ?? count($rows)) ?> Alerts</div>
+        <div class="stat-title">TOTAL EVENT NOTIFICATIONS</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-activity"></i> Automated expiry &amp; payment triggers</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:90%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat stat-pro <?= $unreadPageCnt > 0 ? 'amber' : 'emerald' ?>">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-envelope-exclamation-fill stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-envelope-exclamation-fill"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> Attention</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= $unreadPageCnt ?> Unread</div>
+        <div class="stat-title">UNREAD ON CURRENT VIEW</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-check2-all"></i> 1-click mark all read supported</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:<?= $unreadPageCnt > 0 ? 75 : 100 ?>%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat stat-pro cyan">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-diagram-3-fill stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-diagram-3-fill"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> 5 Channels</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num">6-Branch Sync</div>
+        <div class="stat-title">EXPIRY · RENEWAL · PAYMENTS</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-shield-check"></i> Scoped to your facility permissions</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:100%"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="mb-4 d-flex flex-wrap gap-2">
   <?php foreach ([
-    '' => ['All Notifications', 'bi-bell'],
+    ''                   => ['All Notifications', 'bi-bell'],
     'membership_expired' => ['Expired Plans', 'bi-x-octagon-fill text-danger'],
-    'expiring_soon' => ['Expiring Soon', 'bi-alarm-fill text-warning'],
-    'payment_success' => ['Payment Received', 'bi-check-circle-fill text-success'],
+    'expiring_soon'      => ['Expiring Soon', 'bi-alarm-fill text-warning'],
+    'payment_success'    => ['Payment Received', 'bi-check-circle-fill text-success'],
     'membership_renewal' => ['Renewals', 'bi-arrow-repeat text-info'],
-    'payment_pending' => ['Pending Balances', 'bi-exclamation-circle-fill text-danger']
+    'payment_pending'    => ['Pending Balances', 'bi-exclamation-circle-fill text-danger']
   ] as $k => [$l, $ic]): ?>
     <a class="btn btn-sm <?= $type === $k ? 'btn-brand' : 'btn-outline-secondary' ?>" href="<?= url('notifications', $k ? ['type' => $k] : []) ?>">
       <i class="bi <?= $ic ?> me-1"></i> <?= $l ?>
@@ -28,21 +93,29 @@ page_banner(
   <?php endforeach; ?>
 </div>
 
-<div class="card shadow-sm">
-  <div class="list-group list-group-flush">
+<div class="card card-bento-panel shadow-sm">
+  <i class="bi bi-bell-fill panel-watermark"></i>
+  <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <div class="d-flex align-items-center gap-2">
+      <span class="panel-hdr-ico brand"><i class="bi bi-bell-fill"></i></span>
+      <span>Live Notification &amp; Alert Stream</span>
+    </div>
+    <span class="stat-pill"><span class="stat-dot"></span> <?= count($rows) ?> Listed</span>
+  </div>
+  <div class="list-group list-group-flush position-relative" style="z-index:1">
     <?php foreach ($rows as $n):
-      $ic = [
-        'membership_expired' => 'bi-x-octagon-fill text-danger',
-        'expiring_soon' => 'bi-alarm-fill text-warning',
-        'payment_success' => 'bi-check-circle-fill text-success',
-        'membership_renewal' => 'bi-arrow-repeat text-info',
-        'payment_pending' => 'bi-exclamation-circle-fill text-danger'
-      ][$n['type']] ?? 'bi-bell-fill text-brand';
+      $meta = [
+        'membership_expired' => ['bi-x-octagon-fill',          'red'],
+        'expiring_soon'      => ['bi-alarm-fill',              'amber'],
+        'payment_success'    => ['bi-check-circle-fill',       'emerald'],
+        'membership_renewal' => ['bi-arrow-repeat',            'cyan'],
+        'payment_pending'    => ['bi-exclamation-circle-fill', 'red'],
+      ][$n['type']] ?? ['bi-bell-fill', 'brand'];
     ?>
       <div class="list-group-item bg-transparent d-flex gap-3 align-items-start p-3 <?= $n['is_read'] ? '' : 'border-start border-brand border-4 bg-body-tertiary' ?>">
-        <div class="p-2 rounded-3 bg-body-secondary mt-1">
-          <i class="bi <?= $ic ?> fs-4"></i>
-        </div>
+        <span class="panel-hdr-ico <?= $meta[1] ?> mt-1" style="width:42px;height:42px;font-size:1.15rem">
+          <i class="bi <?= $meta[0] ?>"></i>
+        </span>
         <div class="flex-grow-1">
           <div class="fw-bold fs-6"><?= e($n['title']) ?></div>
           <div class="text-muted small mt-1"><?= e($n['message']) ?></div>

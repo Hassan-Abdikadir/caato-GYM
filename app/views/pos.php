@@ -1,5 +1,5 @@
 <?php
-$posActs = Auth::can('plans.manage')
+$posActs = Auth::can('pos.manage')
   ? '<button class="btn btn-brand btn-sm px-3 py-2" onclick="prodForm()"><i class="bi bi-plus-circle-fill"></i> Add Product / Restock</button>'
   : '';
 page_banner(
@@ -16,34 +16,116 @@ page_banner(
 );
 ?>
 
-<!-- Product Catalog Grid -->
+<!-- 3D Holographic POS KPI Strip -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card stat stat-pro emerald">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-cup-straw stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-cup-straw"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> Today</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= money($todayTotal) ?></div>
+        <div class="stat-title">TODAY'S POS BAR REVENUE</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-lightning-charge-fill"></i> Instant supplement &amp; drink sales</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:78%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat stat-pro brand">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-graph-up-arrow stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-graph-up-arrow"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> <?= date('M Y') ?></span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= money($monthTotal) ?></div>
+        <div class="stat-title">MONTHLY POS BAR REVENUE</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-phone-vibrate-fill"></i> EVC Plus · Salaam Bank · E-Dahab</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:88%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat stat-pro cyan">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-box-seam-fill stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-box-seam-fill"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> Live Stock</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= count($products) ?> SKUs</div>
+        <div class="stat-title">ACTIVE PRODUCT CATALOG</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-check2-circle"></i> Real-time inventory deduction</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:94%"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3D Holographic Product Catalog Grid -->
 <div class="row g-3 mb-4">
 <?php foreach ($products as $p):
-  $iconMap = ['Supplements' => 'bi-lightning-charge-fill text-warning', 'Beverages' => 'bi-droplet-fill text-info', 'Gear & Apparel' => 'bi-bag-heart-fill text-danger'];
-  $ic = $iconMap[$p['category']] ?? 'bi-box-seam-fill text-brand';
+  $catMap = [
+    'Supplements'    => ['ico' => 'bi-lightning-charge-fill', 'theme' => 'amber'],
+    'Beverages'      => ['ico' => 'bi-droplet-fill',          'theme' => 'cyan'],
+    'Gear & Apparel' => ['ico' => 'bi-bag-heart-fill',        'theme' => 'brand'],
+    'Snacks & Bars'  => ['ico' => 'bi-box2-heart-fill',       'theme' => 'violet'],
+  ];
+  $cm = $catMap[$p['category']] ?? ['ico' => 'bi-box-seam-fill', 'theme' => 'emerald'];
+  $stk = (int) $p['stock_qty'];
+  $stkPct = min(100, max(8, (int) round(($stk / 100) * 100)));
 ?>
   <div class="col-md-6 col-lg-4 col-xl-3">
-    <div class="card h-100 shadow-sm">
-      <div class="card-body p-3 d-flex flex-column">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-          <span class="badge text-bg-light border"><i class="bi <?= $ic ?> me-1"></i><?= e($p['category']) ?></span>
-          <span class="badge text-bg-<?= $p['stock_qty'] > 10 ? 'success' : ($p['stock_qty'] > 0 ? 'warning' : 'danger') ?>">
-            <?= (int) $p['stock_qty'] ?> in stock
+    <div class="card stat stat-pro <?= $cm['theme'] ?> h-100">
+      <div class="stat-glow-orb"></div>
+      <i class="bi <?= $cm['ico'] ?> stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi <?= $cm['ico'] ?>"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> <?= e($p['category']) ?></span>
+          <span class="badge text-bg-<?= $stk > 10 ? 'success' : ($stk > 0 ? 'warning' : 'danger') ?>">
+            <?= $stk ?> in stock
           </span>
         </div>
-        <h5 class="fw-bold mb-1"><?= e($p['name']) ?></h5>
-        <small class="text-muted font-monospace mb-2"><?= e($p['sku']) ?></small>
-        <div class="fs-3 fw-bold text-brand mb-3" style="font-family:'Barlow Condensed'"><?= money($p['price']) ?></div>
+      </div>
 
-        <div class="mt-auto d-flex gap-2">
-          <?php if (Auth::can('payments.create') && $p['status'] === 'active' && $p['stock_qty'] > 0): ?>
+      <div class="stat-body my-1">
+        <div class="fw-bold fs-6 mb-1" style="line-height:1.25"><?= e($p['name']) ?></div>
+        <small class="text-muted font-monospace d-block mb-2"><?= e($p['sku']) ?></small>
+        <div class="num"><?= money($p['price']) ?></div>
+      </div>
+
+      <div class="stat-foot mt-auto">
+        <div class="stat-spark mb-2"><div class="stat-spark-fill" style="width:<?= $stkPct ?>%"></div></div>
+        <div class="d-flex gap-2">
+          <?php if (Auth::can('pos.create') && $p['status'] === 'active' && $stk > 0): ?>
             <button class="btn btn-sm btn-brand flex-grow-1" onclick="sellModal(<?= jsattr($p) ?>)">
               <i class="bi bi-cart-check-fill"></i> Quick Sell
             </button>
-          <?php else: ?>
+          <?php elseif ($stk <= 0): ?>
             <button class="btn btn-sm btn-secondary flex-grow-1" disabled>Out of Stock</button>
+          <?php else: ?>
+            <span class="badge text-bg-secondary w-100 py-2">View Only</span>
           <?php endif; ?>
-          <?php if (Auth::can('plans.manage')): ?>
+          <?php if (Auth::can('pos.manage')): ?>
             <button class="btn btn-sm btn-outline-secondary" onclick="prodForm(<?= jsattr($p) ?>)" title="Edit / Restock">
               <i class="bi bi-pencil-square"></i>
             </button>
@@ -56,9 +138,13 @@ page_banner(
 </div>
 
 <!-- Recent POS Sales Table -->
-<div class="card shadow-sm">
+<div class="card card-bento-panel shadow-sm">
+  <i class="bi bi-receipt panel-watermark"></i>
   <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
-    <span><i class="bi bi-receipt text-brand me-2 fs-5"></i> Recent POS Bar Transactions</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="panel-hdr-ico brand"><i class="bi bi-receipt"></i></span>
+      <span>Recent POS Bar Transactions</span>
+    </div>
     <?php if (Auth::isSuper()): ?>
     <form method="get" class="d-flex gap-2">
       <input type="hidden" name="page" value="pos">
@@ -66,10 +152,12 @@ page_banner(
         <?= opts(branch_list(false), $br, 'id', 'name', 'All 6 Branches') ?>
       </select>
     </form>
+    <?php else: ?>
+      <span class="gate-visit-pill active"><i class="bi bi-geo-alt-fill text-danger"></i> <?= e(short_branch(Auth::user()['branch_name'] ?? '')) ?> Scope</span>
     <?php endif; ?>
   </div>
   <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
+    <table class="table table-hover table-pro-matrix align-middle mb-0">
       <thead>
         <tr>
           <th>Sale #</th>
@@ -80,7 +168,7 @@ page_banner(
           <th>Channel &amp; Ref</th>
           <th>Facility</th>
           <th>Cashier</th>
-          <?php if (Auth::can('plans.manage')): ?><th class="text-end">Void</th><?php endif; ?>
+          <?php if (Auth::can('pos.manage')): ?><th class="text-end">Void</th><?php endif; ?>
         </tr>
       </thead>
       <tbody>
@@ -90,14 +178,14 @@ page_banner(
           <td><small class="text-muted"><?= fmt_dt($s['sold_at']) ?></small></td>
           <td class="fw-semibold"><?= e($s['product_name']) ?> <small class="text-muted">(<?= e($s['category']) ?>)</small></td>
           <td><span class="badge text-bg-light border">x<?= (int) $s['qty'] ?></span></td>
-          <td class="fw-bold text-brand"><?= money($s['total_amount']) ?></td>
+          <td><span class="matrix-rev-month"><?= money($s['total_amount']) ?></span></td>
           <td>
             <span class="badge text-bg-secondary"><?= e($s['method_name']) ?></span>
             <?= $s['reference'] ? '<small class="text-muted font-monospace ms-1">' . e($s['reference']) . '</small>' : '' ?>
           </td>
-          <td><i class="bi bi-geo-alt-fill text-danger me-1"></i><?= e(str_replace('CAATO FITNESS GYM – ', '', $s['branch_name'])) ?></td>
+          <td><span class="gate-visit-pill"><i class="bi bi-geo-alt-fill text-danger"></i> <?= e(short_branch($s['branch_name'])) ?></span></td>
           <td><small class="text-muted"><?= e($s['seller'] ?: 'Staff') ?></small></td>
-          <?php if (Auth::can('plans.manage')): ?>
+          <?php if (Auth::can('pos.manage')): ?>
           <td class="text-end">
             <form method="post" class="d-inline">
               <?= csrf_field() ?>
@@ -170,7 +258,7 @@ page_banner(
 </div>
 
 <!-- Add / Edit Product Modal -->
-<?php if (Auth::can('plans.manage')): ?>
+<?php if (Auth::can('pos.manage')): ?>
 <div class="modal fade" id="posProdModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <form class="modal-content shadow-lg" method="post">

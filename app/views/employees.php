@@ -4,6 +4,8 @@ if (Auth::can('reports.view')) {
   $empActs .= '<a href="' . url('export', ['type' => 'employees', 'branch' => $br, 'format' => 'xlsx']) . '" class="btn btn-sm px-3 py-2" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2)"><i class="bi bi-file-earmark-excel-fill text-success"></i> Export Payroll Excel</a>';
 }
 $empActs .= '<button class="btn btn-brand btn-sm px-3 py-2" onclick="eForm()"><i class="bi bi-person-plus-fill"></i> Add Staff Member</button>';
+$totPayroll = array_sum(array_map(fn($x) => (float) ($x['salary'] ?? 0), $rows));
+$withLogin  = count(array_filter($rows, fn($x) => !empty($x['username'])));
 page_banner(
   'HR & PAYROLL LEDGER · WORKFORCE OPERATIONS',
   'Staff &amp;',
@@ -17,8 +19,73 @@ page_banner(
 );
 ?>
 
-<div class="card mb-4 shadow-sm">
-  <div class="card-body p-3 bg-body-tertiary">
+<!-- 3D Holographic Workforce KPI Strip -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card stat stat-pro cyan">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-person-badge-fill stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-person-badge-fill"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> HR Directory</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= (int) ($pg['total'] ?? count($rows)) ?> Staff</div>
+        <div class="stat-title">TOTAL REGISTERED WORKFORCE</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-building-check"></i> Deployed across 6 CAATO facilities</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:90%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat stat-pro brand">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-cash-coin stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-cash-coin"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> Monthly Payroll</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= money($totPayroll) ?></div>
+        <div class="stat-title">PAGE MONTHLY PAYROLL</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-file-earmark-spreadsheet"></i> Exportable to Excel payroll sheet</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:84%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat stat-pro emerald">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-shield-lock-fill stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-shield-lock-fill"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> RBAC Accounts</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= $withLogin ?> Linked</div>
+        <div class="stat-title">STAFF WITH SYSTEM LOGINS</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-key-fill"></i> Role-restricted console access</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:88%"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card card-bento-panel mb-4 shadow-sm">
+  <i class="bi bi-funnel-fill panel-watermark"></i>
+  <div class="card-body p-3 position-relative" style="z-index:1">
     <form class="row g-2 align-items-center" method="get">
       <input type="hidden" name="page" value="employees">
       <div class="col-md-3">
@@ -32,6 +99,12 @@ page_banner(
         <select name="branch" class="form-select form-select-sm">
           <?= opts(branch_list(false), $br, 'id', 'name', 'Facility: All Branches') ?>
         </select>
+      </div>
+      <?php else: ?>
+      <div class="col-md-3">
+        <div class="form-control form-control-sm bg-body-secondary fw-semibold text-truncate">
+          <i class="bi bi-geo-alt-fill text-danger me-1"></i> <?= e(short_branch(Auth::user()['branch_name'] ?? '')) ?>
+        </div>
       </div>
       <?php endif; ?>
       <div class="col-md-2">
@@ -53,9 +126,17 @@ page_banner(
   </div>
 </div>
 
-<div class="card shadow-sm">
+<div class="card card-bento-panel shadow-sm">
+  <i class="bi bi-person-badge-fill panel-watermark"></i>
+  <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <div class="d-flex align-items-center gap-2">
+      <span class="panel-hdr-ico cyan"><i class="bi bi-person-badge-fill"></i></span>
+      <span>Staff &amp; Workforce Payroll Matrix</span>
+    </div>
+    <span class="stat-pill"><span class="stat-dot"></span> <?= (int) ($pg['total'] ?? count($rows)) ?> Employees</span>
+  </div>
   <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
+    <table class="table table-hover table-pro-matrix align-middle mb-0">
       <thead>
         <tr>
           <th>Employee Details</th>
@@ -73,18 +154,18 @@ page_banner(
         <tr>
           <td>
             <div class="fw-bold fs-6"><?= e($r['full_name']) ?></div>
-            <small class="text-muted"><i class="bi bi-telephone me-1"></i><?= e($r['phone']) ?> · <?= e($r['email']) ?></small>
+            <small class="text-muted"><i class="bi bi-telephone me-1"></i><?= e($r['phone']) ?><?= $r['email'] ? ' · ' . e($r['email']) : '' ?></small>
           </td>
           <td>
             <div class="fw-semibold"><?= e($r['position']) ?></div>
-            <small class="text-muted"><?= e($r['role_label']) ?></small>
+            <small class="text-muted"><i class="bi bi-shield-check me-1 text-brand"></i><?= e($r['role_label']) ?></small>
           </td>
-          <td><i class="bi bi-geo-alt-fill text-danger me-1"></i><?= e($r['branch_name']) ?></td>
-          <td class="fw-semibold text-brand"><?= money($r['salary']) ?></td>
+          <td><span class="gate-visit-pill"><i class="bi bi-geo-alt-fill text-danger"></i> <?= e(short_branch($r['branch_name'])) ?></span></td>
+          <td><span class="matrix-rev-month"><?= money($r['salary']) ?></span></td>
           <td><small class="text-muted"><i class="bi bi-calendar3 me-1"></i><?= fmt_date($r['joining_date']) ?></small></td>
           <td>
             <?php if ($r['username']): ?>
-              <span class="badge text-bg-light border font-monospace"><i class="bi bi-person-check me-1"></i><?= e($r['username']) ?></span>
+              <span class="badge text-bg-light border font-monospace"><i class="bi bi-person-check-fill text-success me-1"></i><?= e($r['username']) ?></span>
             <?php else: ?>
               <span class="text-muted small">No account</span>
             <?php endif; ?>
@@ -102,7 +183,7 @@ page_banner(
               <input type="hidden" name="action" value="toggle">
               <input type="hidden" name="id" value="<?= $r['id'] ?>">
               <button class="btn btn-sm btn-outline-danger" data-confirm="Change this employee's status? Their login is affected too.">
-                <?= $r['status'] === 'active' ? '<i class="bi bi-person-x"></i> Deactivate' : '<i class="bi bi-person-check"></i> Activate' ?>
+                <?= $r['status'] === 'active' ? '<i class="bi bi-person-x"></i>' : '<i class="bi bi-person-check"></i>' ?>
               </button>
             </form>
             <form method="post" class="d-inline">

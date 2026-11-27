@@ -1,4 +1,5 @@
 <?php
+$activeMethodsCnt = count(array_filter($methods, fn($x) => $x['status'] === 'active'));
 page_banner(
   'GLOBAL CONFIGURATION · CHANNELS, SMTP & SECURITY AUDIT',
   'System',
@@ -12,13 +13,77 @@ page_banner(
 );
 ?>
 
+<!-- 3D Holographic System Telemetry Strip -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card stat stat-pro brand">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-sliders stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-sliders"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> Enterprise Identity</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num fs-4"><?= e(setting('gym_name', 'CAATO FITNESS GYM')) ?></div>
+        <div class="stat-title">CURRENCY (<?= e(setting('currency', '$')) ?>) · <?= (int) setting('expiry_warning_days', 7) ?>D EXPIRY ALERT</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-building-check"></i> Synchronized across all 6 branches</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:100%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat stat-pro emerald">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-credit-card-2-front-fill stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-credit-card-2-front-fill"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> Payment Gateways</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= $activeMethodsCnt ?> / <?= count($methods) ?> Active</div>
+        <div class="stat-title">EVC PLUS · SALAAM · E-DAHAB</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-shield-check"></i> Reference-verified payment channels</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:92%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat stat-pro cyan">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-shield-check stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-shield-check"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> Security &amp; Mail</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= setting('smtp_host') ? 'SMTP Ready' : 'Audit Active' ?></div>
+        <div class="stat-title">ZERO-TRUST AUDIT &amp; MAIL ENGINE</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-clock-history"></i> Full IP &amp; action trail logged</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:88%"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <ul class="nav nav-tabs mb-4">
-  <?php 
+  <?php
   $tabs = [
     'general' => ['Organization Profile', 'bi-sliders'],
     'methods' => ['Payment Channels', 'bi-credit-card-2-front-fill'],
-    'smtp' => ['Email SMTP Gateway', 'bi-envelope-at-fill'],
-    'audit' => ['Security Audit Log', 'bi-shield-check']
+    'smtp'    => ['Email SMTP Gateway', 'bi-envelope-at-fill'],
+    'audit'   => ['Security Audit Log', 'bi-shield-check']
   ];
   foreach ($tabs as $k => [$l, $ic]): ?>
     <li class="nav-item">
@@ -30,11 +95,15 @@ page_banner(
 </ul>
 
 <?php if ($tab === 'general'): ?>
-<form method="post" class="card shadow-sm" style="max-width:740px">
+<form method="post" class="card card-bento-panel shadow-sm" style="max-width:780px">
+  <i class="bi bi-sliders panel-watermark"></i>
   <?= csrf_field() ?>
   <input type="hidden" name="action" value="general">
-  <div class="card-header"><i class="bi bi-sliders text-brand me-2 fs-5"></i> Core Organization Profile</div>
-  <div class="card-body p-4 row g-3">
+  <div class="card-header d-flex align-items-center gap-2">
+    <span class="panel-hdr-ico brand"><i class="bi bi-sliders"></i></span>
+    <span>Core Organization Profile</span>
+  </div>
+  <div class="card-body p-4 row g-3 position-relative" style="z-index:1">
     <div class="col-6">
       <label class="form-label small fw-semibold">Gym / Enterprise Name</label>
       <input name="gym_name" value="<?= e(setting('gym_name', 'CAATO FITNESS GYM')) ?>" class="form-control" required>
@@ -72,12 +141,16 @@ page_banner(
 <?php elseif ($tab === 'smtp'): ?>
 <div class="row g-3">
   <div class="col-lg-7">
-    <form method="post" class="card shadow-sm h-100">
+    <form method="post" class="card card-bento-panel shadow-sm h-100">
+      <i class="bi bi-envelope-at-fill panel-watermark"></i>
       <?= csrf_field() ?>
       <input type="hidden" name="action" value="smtp">
       <input type="hidden" name="tab" value="smtp">
-      <div class="card-header"><i class="bi bi-envelope-at-fill text-brand me-2 fs-5"></i> SMTP Outbound Email Gateway</div>
-      <div class="card-body p-4 row g-3">
+      <div class="card-header d-flex align-items-center gap-2">
+        <span class="panel-hdr-ico brand"><i class="bi bi-envelope-at-fill"></i></span>
+        <span>SMTP Outbound Email Gateway</span>
+      </div>
+      <div class="card-body p-4 row g-3 position-relative" style="z-index:1">
         <div class="col-8">
           <label class="form-label small fw-semibold">SMTP Host</label>
           <input name="smtp_host" value="<?= e(setting('smtp_host')) ?>" class="form-control" placeholder="e.g. smtp.gmail.com">
@@ -110,12 +183,16 @@ page_banner(
   </div>
 
   <div class="col-lg-5">
-    <form method="post" class="card shadow-sm">
+    <form method="post" class="card card-bento-panel shadow-sm">
+      <i class="bi bi-send-check-fill panel-watermark"></i>
       <?= csrf_field() ?>
       <input type="hidden" name="action" value="smtp_test">
       <input type="hidden" name="tab" value="smtp">
-      <div class="card-header"><i class="bi bi-send-check-fill text-success me-2 fs-5"></i> Verify SMTP Gateway</div>
-      <div class="card-body p-4">
+      <div class="card-header d-flex align-items-center gap-2">
+        <span class="panel-hdr-ico emerald"><i class="bi bi-send-check-fill"></i></span>
+        <span>Verify SMTP Gateway</span>
+      </div>
+      <div class="card-body p-4 position-relative" style="z-index:1">
         <p class="small text-muted">Send a live test email to verify that welcome messages will reach newly registered customers.</p>
         <label class="form-label small fw-semibold">Recipient Email Address *</label>
         <input type="email" name="test_email" class="form-control mb-3" required placeholder="yourname@gmail.com">
@@ -128,10 +205,14 @@ page_banner(
 <?php elseif ($tab === 'methods'): ?>
 <div class="row g-3">
   <div class="col-lg-7">
-    <div class="card shadow-sm h-100">
-      <div class="card-header"><i class="bi bi-credit-card-2-front-fill text-brand me-2 fs-5"></i> Configured Payment Channels</div>
+    <div class="card card-bento-panel shadow-sm h-100">
+      <i class="bi bi-credit-card-2-front-fill panel-watermark"></i>
+      <div class="card-header d-flex align-items-center gap-2">
+        <span class="panel-hdr-ico emerald"><i class="bi bi-credit-card-2-front-fill"></i></span>
+        <span>Configured Payment Channels</span>
+      </div>
       <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+        <table class="table table-hover table-pro-matrix align-middle mb-0">
           <thead>
             <tr><th>Channel</th><th>Requires Reference</th><th>Status</th><th class="text-end">Action</th></tr>
           </thead>
@@ -161,12 +242,16 @@ page_banner(
   </div>
 
   <div class="col-lg-5">
-    <form method="post" class="card shadow-sm">
+    <form method="post" class="card card-bento-panel shadow-sm">
+      <i class="bi bi-plus-circle-fill panel-watermark"></i>
       <?= csrf_field() ?>
       <input type="hidden" name="tab" value="methods">
       <input type="hidden" name="action" value="method_add">
-      <div class="card-header"><i class="bi bi-plus-circle-fill text-brand me-2 fs-5"></i> Add Payment Channel</div>
-      <div class="card-body p-4">
+      <div class="card-header d-flex align-items-center gap-2">
+        <span class="panel-hdr-ico brand"><i class="bi bi-plus-circle-fill"></i></span>
+        <span>Add Payment Channel</span>
+      </div>
+      <div class="card-body p-4 position-relative" style="z-index:1">
         <label class="form-label small fw-semibold">Payment Channel Name *</label>
         <input name="name" class="form-control mb-3" placeholder="e.g. Premier Wallet, Zaad, Cash" required>
         <div class="form-check mb-4">
@@ -180,10 +265,17 @@ page_banner(
 </div>
 
 <?php else: ?>
-<div class="card shadow-sm">
-  <div class="card-header"><i class="bi bi-shield-check text-brand me-2 fs-5"></i> System Audit &amp; Security Event Trail</div>
+<div class="card card-bento-panel shadow-sm">
+  <i class="bi bi-shield-check panel-watermark"></i>
+  <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <div class="d-flex align-items-center gap-2">
+      <span class="panel-hdr-ico cyan"><i class="bi bi-shield-check"></i></span>
+      <span>System Audit &amp; Security Event Trail</span>
+    </div>
+    <span class="stat-pill"><span class="stat-dot"></span> Zero-Trust Immutable Log</span>
+  </div>
   <div class="table-responsive">
-    <table class="table table-sm table-hover align-middle mb-0">
+    <table class="table table-hover table-pro-matrix align-middle mb-0">
       <thead>
         <tr>
           <th>Timestamp</th>
@@ -198,8 +290,8 @@ page_banner(
       <?php foreach ($logs as $l): ?>
         <tr>
           <td class="text-nowrap small text-muted"><i class="bi bi-clock me-1"></i><?= fmt_dt($l['created_at']) ?></td>
-          <td class="fw-semibold"><?= e($l['username'] ?: 'system') ?></td>
-          <td><span class="badge text-bg-light border"><?= e($l['branch_code'] ?: 'HQ') ?></span></td>
+          <td class="fw-semibold"><i class="bi bi-person-badge me-1 text-brand"></i><?= e($l['username'] ?: 'system') ?></td>
+          <td><span class="badge text-bg-light border font-monospace"><?= e($l['branch_code'] ?: 'HQ') ?></span></td>
           <td><code class="text-brand fw-bold"><?= e($l['action']) ?></code></td>
           <td class="small"><?= e($l['details']) ?></td>
           <td><small class="font-monospace text-muted"><?= e($l['ip_address']) ?></small></td>

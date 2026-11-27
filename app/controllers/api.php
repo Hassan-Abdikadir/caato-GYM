@@ -19,7 +19,7 @@ try {
                 'phone' => $r['phone'],
                 'photo' => photo_url($r['profile_picture']),
                 'fingerprint_id' => $r['fingerprint_id'] ?? null,
-                'reg_branch' => $r['reg_branch'],
+                'reg_branch' => short_branch($r['reg_branch']),
                 'plan' => $r['plan_name'] ?: '—',
                 'payment' => $r['payment_status'] ?: '—',
                 'start' => fmt_date($r['start_date']),
@@ -121,7 +121,7 @@ try {
                 'time' => date('h:i:s A', strtotime($r['check_in_at'])),
                 'datetime' => fmt_dt($r['check_in_at']),
                 'method' => $r['checkin_method'] ?: 'fingerprint_door',
-                'branch' => $r['visit_branch'],
+                'branch' => short_branch($r['visit_branch']),
                 'is_visiting' => $r['visit_branch'] !== $r['reg_branch']
             ];
         }

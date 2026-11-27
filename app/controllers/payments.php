@@ -15,7 +15,7 @@ if ($tab === 'pending') {
         $w ORDER BY m.id DESC LIMIT 200", $p);
     $outstanding = array_sum(array_map(fn($r) => $r['price'] - $r['amount_paid'], $rows));
     render('payments', ['pageTitle' => 'Payments', 'tab' => $tab, 'rows' => $rows, 'outstanding' => $outstanding, 'methods' => $methods, 'br' => $br, 'q' => $q, 'df' => $df, 'dt' => $dt, 'mt' => $mt, 'pg' => null, 'sum' => 0]);
-    exit;
+    return;
 }
 [$sc, $sp] = scope_branch('p.branch_id', $br);
 $w = " WHERE 1=1 $sc"; $p = $sp;

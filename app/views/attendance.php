@@ -15,15 +15,29 @@ page_banner(
 );
 ?>
 
-<!-- 6-Branch Today's Attendance Telemetry Bar -->
-<div class="row g-2 mb-4">
-<?php foreach ($stats as $s): ?>
+<!-- 6-Branch Today's Attendance 3D Bento Telemetry Bar -->
+<div class="row g-3 mb-4">
+<?php
+$bColors = ['brand', 'cyan', 'emerald', 'violet', 'amber', 'green'];
+foreach ($stats as $idx => $s):
+  $col = $bColors[$idx % count($bColors)];
+  $pct = $todayAllVisits > 0 ? (int) round(((int) $s['attendance_today'] / $todayAllVisits) * 100) : 0;
+?>
   <div class="col-6 col-md-4 col-xl-2">
-    <div class="card stat py-2 px-3">
-      <div class="ico" style="width:46px;height:46px;font-size:1.35rem!important"><i class="bi bi-door-open-fill"></i></div>
-      <div class="overflow-hidden">
-        <div class="num fs-4"><?= (int) $s['attendance_today'] ?></div>
-        <small class="text-truncate" style="font-size:0.72rem"><?= e(str_replace('CAATO FITNESS GYM – ', '', $s['name'])) ?></small>
+    <div class="card stat stat-pro <?= $col ?> h-100">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-fingerprint stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico" style="width:44px;height:44px;font-size:1.35rem!important"><i class="bi bi-door-open-fill"></i></div>
+        <span class="stat-pill"><span class="stat-dot"></span><?= e($s['code']) ?></span>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= (int) $s['attendance_today'] ?></div>
+        <div class="stat-title text-truncate"><?= e(short_branch($s['name'])) ?></div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><?= (int) $s['attendance_month'] ?> visits this mo</span>
+        <div class="stat-spark"><span class="stat-spark-fill" style="width:<?= max(15, $pct) ?>%"></span></div>
       </div>
     </div>
   </div>
@@ -31,8 +45,9 @@ page_banner(
 </div>
 
 <?php if ($canCheckin): ?>
-<div class="card mb-4 shadow-md border-primary-subtle" id="kioskContainer">
-  <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2 pb-0 border-bottom-0">
+<div class="card card-bento-panel mb-4 shadow-md" id="kioskContainer">
+  <i class="bi bi-qr-code-scan panel-watermark"></i>
+  <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2 pb-0 border-bottom-0 position-relative" style="z-index:2">
     <ul class="nav nav-tabs border-bottom-0" role="tablist">
       <li class="nav-item">
         <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabSearch" type="button">
@@ -57,12 +72,12 @@ page_banner(
         <select id="branchSel" class="form-select form-select-sm fw-bold" style="min-width:210px"><?= opts($branches, '', 'id', 'name') ?></select>
       <?php else: ?>
         <input type="hidden" id="branchSel" value="<?= (int) Auth::branchId() ?>">
-        <span class="badge text-bg-dark py-2 px-3"><span class="pulse-dot me-1"></span> <?= e(str_replace('CAATO FITNESS GYM – ', '', Auth::user()['branch_name'])) ?></span>
+        <span class="badge text-bg-dark py-2 px-3"><span class="pulse-dot me-1"></span> <?= e(short_branch(Auth::user()['branch_name'])) ?></span>
       <?php endif; ?>
     </div>
   </div>
 
-  <div class="card-body p-4 border-top">
+  <div class="card-body p-4 border-top position-relative" style="z-index:2">
     <div class="tab-content">
       <!-- TAB 1: Instant Member Search & USB Barcode/QR Reader -->
       <div class="tab-pane fade show active" id="tabSearch">
@@ -144,17 +159,19 @@ page_banner(
 <?php endif; ?>
 
 <!-- Attendance History & Live Door Log -->
-<div class="card shadow-sm">
+<div class="card card-bento-panel shadow-sm">
+  <i class="bi bi-clock-history panel-watermark"></i>
   <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
-    <div>
-      <i class="bi bi-clock-history text-brand me-2 fs-5"></i>
-      <span>Verified Cross-Branch Door Access Log</span>
-    </div>
     <div class="d-flex align-items-center gap-2">
-      <span class="badge text-bg-success"><span class="pulse-dot me-1"></span> 1 Check-in / Member / Day Rule Active</span>
+      <span class="panel-hdr-ico cyan"><i class="bi bi-clock-history"></i></span>
+      <div>
+        <div class="lh-1">Verified Cross-Branch Door Access Log</div>
+        <small class="text-muted fw-normal" style="font-size:0.71rem;font-family:'Outfit'">Anti-Passback Biometric &amp; QR Turnstile History</small>
+      </div>
     </div>
+    <span class="badge text-bg-success"><span class="pulse-dot me-1"></span> 1 Check-in / Member / Day Rule Active</span>
   </div>
-  <div class="card-body border-bottom bg-body-tertiary p-3">
+  <div class="card-body border-bottom bg-body-tertiary p-3 position-relative" style="z-index:2">
     <form class="row g-2 align-items-center" method="get">
       <input type="hidden" name="page" value="attendance">
       <div class="col-md-3">
@@ -181,33 +198,39 @@ page_banner(
           <?= opts(branch_list(false), $br, 'id', 'name', 'All 6 Branches (Unified)') ?>
         </select>
       </div>
+      <?php else: ?>
+      <div class="col-md-3">
+        <div class="form-control form-control-sm bg-body-secondary fw-semibold text-truncate">
+          <i class="bi bi-geo-alt-fill text-danger me-1"></i> <?= e(short_branch(Auth::user()['branch_name'] ?? '')) ?>
+        </div>
+      </div>
       <?php endif; ?>
       <div class="col-md-2 d-grid">
         <button class="btn btn-sm btn-brand"><i class="bi bi-funnel-fill"></i> Filter Log</button>
       </div>
     </form>
   </div>
-  <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
+  <div class="table-responsive position-relative" style="z-index:2">
+    <table class="table table-hover table-pro-matrix align-middle mb-0">
       <thead>
         <tr>
-          <th>Check-in Time</th>
+          <th class="ps-4">Check-in Time</th>
           <th>Member Profile</th>
           <th>Verification Method</th>
           <th>Checked In Facility</th>
           <th>Home Facility</th>
-          <?php if ($canCheckin): ?><th class="text-end">Action</th><?php endif; ?>
+          <?php if ($canCheckin): ?><th class="pe-4 text-end">Action</th><?php endif; ?>
         </tr>
       </thead>
       <tbody>
       <?php foreach ($rows as $r): ?>
         <tr>
-          <td><span class="badge text-bg-secondary"><i class="bi bi-clock"></i> <?= fmt_dt($r['check_in_at']) ?></span></td>
+          <td class="ps-4"><span class="badge text-bg-secondary"><i class="bi bi-clock"></i> <?= fmt_dt($r['check_in_at']) ?></span></td>
           <td>
             <div class="d-flex align-items-center gap-2">
               <img src="<?= photo_url($r['profile_picture']) ?>" class="avatar" style="width:40px;height:40px">
               <div>
-                <a class="fw-bold" href="<?= url('customer_view', ['id' => $r['cid']]) ?>"><?= e($r['full_name']) ?></a>
+                <a class="fw-bold text-ink" href="<?= url('customer_view', ['id' => $r['cid']]) ?>"><?= e($r['full_name']) ?></a>
                 <small class="text-muted d-block font-monospace"><?= e($r['customer_code']) ?><?= $r['fingerprint_id'] ? ' · <i class="bi bi-fingerprint text-success"></i> ' . e($r['fingerprint_id']) : '' ?></small>
               </div>
             </div>
@@ -219,13 +242,13 @@ page_banner(
               <span class="badge text-bg-info"><i class="bi bi-qr-code-scan"></i> QR / Reception</span>
             <?php endif; ?>
           </td>
-          <td><i class="bi bi-geo-alt-fill text-danger me-1"></i> <?= e($r['visit_branch']) ?></td>
+          <td><span class="fw-semibold"><i class="bi bi-geo-alt-fill text-danger me-1"></i> <?= e(short_branch($r['visit_branch'])) ?></span></td>
           <td>
-            <?= e($r['reg_branch']) ?>
+            <?= e(short_branch($r['reg_branch'])) ?>
             <?= $r['branch_id'] != $r['registered_branch_id'] ? '<span class="badge text-bg-info ms-1"><i class="bi bi-airplane-engines"></i> Cross-Branch Guest</span>' : '' ?>
           </td>
           <?php if ($canCheckin): ?>
-          <td class="text-end">
+          <td class="pe-4 text-end">
             <form method="post" class="d-inline">
               <?= csrf_field() ?>
               <input type="hidden" name="action" value="delete_log">
@@ -243,7 +266,7 @@ page_banner(
       </tbody>
     </table>
   </div>
-  <div class="card-footer bg-transparent py-3"><?= pager($pg) ?></div>
+  <div class="card-footer bg-transparent py-3 position-relative" style="z-index:2"><?= pager($pg) ?></div>
 </div>
 
 <?php if ($canCheckin): ?>
@@ -337,7 +360,6 @@ async function checkin(id, btn, method = 'qr_scan') {
   return j;
 }
 
-// Biometric Door Terminal Handler
 async function triggerBiometricDoor(e) {
   if (e) e.preventDefault();
   const inp = document.getElementById('fpInput');
@@ -379,7 +401,6 @@ async function triggerBiometricDoor(e) {
   `;
 }
 
-// Optical Camera QR Code Scanner (using BarcodeDetector API or fallback canvas frame scan)
 let qrStream = null, qrLoop = null;
 async function startQrCamera() {
   const video = document.getElementById('qrVideo');

@@ -1,9 +1,9 @@
 <?php
-Auth::need('trainers.view');
-$canManage = Auth::can('trainers.manage');
+Auth::need('classes.view');
+$canManage = Auth::can('classes.manage');
 
 if (is_post()) {
-    Auth::need('trainers.manage');
+    Auth::need('classes.manage');
     try {
         $a = req('action');
         $id = (int) req('id');

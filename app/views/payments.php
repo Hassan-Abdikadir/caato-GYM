@@ -14,6 +14,70 @@ page_banner(
 );
 ?>
 
+<!-- 3D Holographic KPI Summary Strip -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card stat stat-pro <?= $tab === 'pending' ? 'red' : 'emerald' ?>">
+      <div class="stat-glow-orb"></div>
+      <i class="bi <?= $tab === 'pending' ? 'bi-exclamation-octagon-fill' : 'bi-cash-stack' ?> stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi <?= $tab === 'pending' ? 'bi-exclamation-octagon-fill' : 'bi-cash-stack' ?>"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> <?= $tab === 'pending' ? 'Receivables' : 'Verified Ledger' ?></span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= $tab === 'pending' ? money($outstanding) : money($sum) ?></div>
+        <div class="stat-title"><?= $tab === 'pending' ? 'OUTSTANDING BALANCE DUE' : 'FILTERED VERIFIED REVENUE' ?></div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-shield-check"></i> Zero-cash electronic gateway ledger</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:90%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat stat-pro <?= $tab === 'pending' ? 'amber' : 'cyan' ?>">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-receipt-cutoff stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-receipt-cutoff"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> Audit Count</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= $tab === 'pending' ? count($rows) : (int) ($pg['total'] ?? count($rows)) ?></div>
+        <div class="stat-title"><?= $tab === 'pending' ? 'ACCOUNTS WITH BALANCE' : 'VERIFIED TRANSACTIONS' ?></div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-printer-fill"></i> Thermal 80mm &amp; PDF receipts ready</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:82%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat stat-pro brand">
+      <div class="stat-glow-orb"></div>
+      <i class="bi bi-phone-vibrate-fill stat-watermark"></i>
+      <div class="stat-top">
+        <div class="ico"><i class="bi bi-phone-vibrate-fill"></i></div>
+        <div class="stat-meta-right">
+          <span class="stat-pill"><span class="stat-dot"></span> Channels</span>
+        </div>
+      </div>
+      <div class="stat-body">
+        <div class="num"><?= count($methods) ?> Gateways</div>
+        <div class="stat-title">EVC PLUS · SALAAM · E-DAHAB</div>
+      </div>
+      <div class="stat-foot">
+        <span class="stat-sub"><i class="bi bi-building-check"></i> Synchronized across all 6 branches</span>
+        <div class="stat-spark"><div class="stat-spark-fill" style="width:100%"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <ul class="nav nav-tabs mb-4">
   <li class="nav-item">
     <a class="nav-link <?= $tab === 'all' ? 'active' : '' ?>" href="<?= url('payments') ?>">
@@ -28,30 +92,41 @@ page_banner(
 </ul>
 
 <?php if ($tab === 'pending'): ?>
-<div class="alert alert-warning py-3 d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 shadow-sm border-warning-subtle">
-  <div class="d-flex align-items-center gap-3">
-    <i class="bi bi-exclamation-triangle-fill text-warning fs-3 flex-shrink-0"></i>
-    <div>
-      Total outstanding balance across all listed memberships: <strong class="fs-5 text-danger"><?= money($outstanding) ?></strong>.
-      <div class="small text-muted">Members with pending balances are blocked at the biometric door gate across all 6 branches until settled.</div>
+<div class="card card-bento-panel mb-4 shadow-sm">
+  <i class="bi bi-exclamation-triangle-fill panel-watermark"></i>
+  <div class="card-body p-3 d-flex flex-wrap align-items-center justify-content-between gap-3 position-relative" style="z-index:1">
+    <div class="d-flex align-items-center gap-3">
+      <span class="panel-hdr-ico amber" style="width:42px;height:42px;font-size:1.2rem"><i class="bi bi-exclamation-triangle-fill"></i></span>
+      <div>
+        Total outstanding balance across all listed memberships: <strong class="fs-5 text-danger"><?= money($outstanding) ?></strong>.
+        <div class="small text-muted">Members with pending balances are blocked at the biometric door gate across all 6 branches until settled.</div>
+      </div>
     </div>
+    <form method="get" class="d-flex gap-2">
+      <input type="hidden" name="page" value="payments">
+      <input type="hidden" name="tab" value="pending">
+      <input name="q" value="<?= e($q) ?>" class="form-control form-control-sm" placeholder="Search member or ID…">
+      <?php if (Auth::isSuper()): ?>
+        <select name="branch" class="form-select form-select-sm">
+          <?= opts(branch_list(false), $br, 'id', 'name', 'All Branches') ?>
+        </select>
+      <?php endif; ?>
+      <button class="btn btn-sm btn-brand"><i class="bi bi-search"></i></button>
+    </form>
   </div>
-  <form method="get" class="d-flex gap-2">
-    <input type="hidden" name="page" value="payments">
-    <input type="hidden" name="tab" value="pending">
-    <input name="q" value="<?= e($q) ?>" class="form-control form-control-sm" placeholder="Search member or ID…">
-    <?php if (Auth::isSuper()): ?>
-      <select name="branch" class="form-select form-select-sm">
-        <?= opts(branch_list(false), $br, 'id', 'name', 'All Branches') ?>
-      </select>
-    <?php endif; ?>
-    <button class="btn btn-sm btn-brand"><i class="bi bi-search"></i></button>
-  </form>
 </div>
 
-<div class="card shadow-sm">
+<div class="card card-bento-panel shadow-sm">
+  <i class="bi bi-exclamation-octagon-fill panel-watermark"></i>
+  <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <div class="d-flex align-items-center gap-2">
+      <span class="panel-hdr-ico red"><i class="bi bi-exclamation-octagon-fill"></i></span>
+      <span>Pending &amp; Partial Balances Matrix</span>
+    </div>
+    <span class="stat-pill"><span class="stat-dot"></span> <?= count($rows) ?> Pending Accounts</span>
+  </div>
   <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
+    <table class="table table-hover table-pro-matrix align-middle mb-0">
       <thead>
         <tr>
           <th>Customer</th>
@@ -74,7 +149,7 @@ page_banner(
             <small class="text-muted d-block"><i class="bi bi-upc-scan me-1"></i><?= e($r['customer_code']) ?> · <i class="bi bi-telephone me-1"></i><?= e($r['phone']) ?></small>
           </td>
           <td><span class="badge text-bg-light border"><?= e($r['plan_name']) ?></span></td>
-          <td><i class="bi bi-geo-alt-fill text-danger me-1"></i><?= e($r['branch_name']) ?></td>
+          <td><span class="gate-visit-pill"><i class="bi bi-geo-alt-fill text-danger"></i> <?= e(short_branch($r['branch_name'])) ?></span></td>
           <td><?= money($r['price']) ?></td>
           <td class="text-success fw-semibold"><?= money($r['amount_paid']) ?></td>
           <td class="fw-bold text-danger fs-6"><?= money($bal) ?></td>
@@ -113,8 +188,9 @@ page_banner(
   <?php endforeach; ?>
 </div>
 
-<div class="card mb-4 shadow-sm">
-  <div class="card-body p-3 bg-body-tertiary">
+<div class="card card-bento-panel mb-4 shadow-sm">
+  <i class="bi bi-funnel-fill panel-watermark"></i>
+  <div class="card-body p-3 position-relative" style="z-index:1">
     <form class="row g-2 align-items-center" method="get">
       <input type="hidden" name="page" value="payments">
       <div class="col-md-3">
@@ -146,6 +222,12 @@ page_banner(
           <?= opts(branch_list(false), $br, 'id', 'name', 'Facility: Any') ?>
         </select>
       </div>
+      <?php else: ?>
+      <div class="col-md-2">
+        <div class="form-control form-control-sm bg-body-secondary fw-semibold text-truncate">
+          <i class="bi bi-geo-alt-fill text-danger me-1"></i> <?= e(short_branch(Auth::user()['branch_name'] ?? '')) ?>
+        </div>
+      </div>
       <?php endif; ?>
       <div class="col-md-1 d-grid">
         <button class="btn btn-sm btn-brand"><i class="bi bi-funnel-fill"></i></button>
@@ -154,13 +236,17 @@ page_banner(
   </div>
 </div>
 
-<div class="card shadow-sm">
+<div class="card card-bento-panel shadow-sm">
+  <i class="bi bi-receipt-cutoff panel-watermark"></i>
   <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
-    <span><i class="bi bi-receipt-cutoff text-brand me-2 fs-5"></i> Verified Payment Ledger</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="panel-hdr-ico emerald"><i class="bi bi-receipt-cutoff"></i></span>
+      <span>Verified Payment Ledger</span>
+    </div>
     <span class="badge text-bg-success fs-6"><i class="bi bi-cash-stack me-1"></i> Filtered Total: <?= money($sum) ?></span>
   </div>
   <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
+    <table class="table table-hover table-pro-matrix align-middle mb-0">
       <thead>
         <tr>
           <th>Receipt #</th>
@@ -183,12 +269,12 @@ page_banner(
             <small class="text-muted d-block font-monospace"><?= e($r['customer_code']) ?></small>
           </td>
           <td><span class="badge text-bg-light border"><?= e($r['plan_name']) ?></span></td>
-          <td><i class="bi bi-geo-alt-fill text-danger me-1"></i><?= e(str_replace('CAATO FITNESS GYM – ', '', $r['branch_name'])) ?></td>
+          <td><span class="gate-visit-pill"><i class="bi bi-geo-alt-fill text-danger"></i> <?= e(short_branch($r['branch_name'])) ?></span></td>
           <td>
             <span class="badge text-bg-secondary"><?= e($r['method']) ?></span>
             <?= $r['reference'] ? '<br><small class="text-muted font-monospace">Ref: ' . e($r['reference']) . '</small>' : '' ?>
           </td>
-          <td class="fw-bold text-brand fs-6"><?= money($r['amount']) ?></td>
+          <td><span class="matrix-rev-month"><?= money($r['amount']) ?></span></td>
           <td class="text-end">
             <a href="<?= url('receipt', ['id' => $r['id']]) ?>" class="btn btn-sm btn-outline-brand py-1 px-2" title="Print / View Receipt">
               <i class="bi bi-printer-fill"></i>

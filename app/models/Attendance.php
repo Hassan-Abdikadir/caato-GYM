@@ -57,7 +57,7 @@ final class Attendance
             if ((int) ($e->errorInfo[1] ?? 0) === 1062) {
                 $prev = DB::one('SELECT a.check_in_at, b.name FROM attendance a JOIN branches b ON b.id=a.branch_id WHERE a.customer_id=? AND a.attendance_date=CURDATE()', [$customerId]);
                 $prevTime = date('h:i A', strtotime($prev['check_in_at'] ?? $now));
-                $prevBranch = $prev['name'] ?? 'This branch';
+                $prevBranch = short_branch($prev['name'] ?? 'This branch');
                 $dupMsg = "Already checked in today at {$prevTime} ({$prevBranch}). Duplicate door entry blocked.";
                 return [
                     false, $dupMsg, 'warning',
@@ -82,7 +82,7 @@ final class Attendance
         }
 
         audit('checkin', 'attendance', $id, "Customer {$c['customer_code']} via $method at branch #$branchId");
-        $visit = $branchId != $c['registered_branch_id'] ? " (Visiting from {$c['reg_branch']})" : '';
+        $visit = $branchId != $c['registered_branch_id'] ? ' (Visiting from ' . short_branch($c['reg_branch']) . ')' : '';
         $successMsg = "DOOR UNLOCKED / ALBAABKA WAA LA FURAY: Soo dhowow {$c['full_name']}! Xiliga soo galitaanka: {$timeStr}{$visit}.";
 
         return [
@@ -104,7 +104,7 @@ final class Attendance
                 'plan' => $c['plan_name'],
                 'end_date' => fmt_date($c['end_date']),
                 'status' => $c['eff_status'],
-                'home_branch' => $c['reg_branch'],
+                'home_branch' => short_branch($c['reg_branch']),
             ]
         ];
     }

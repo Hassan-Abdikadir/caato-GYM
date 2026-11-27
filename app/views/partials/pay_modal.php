@@ -1,14 +1,18 @@
 <?php $payMethods = DB::all("SELECT * FROM payment_methods WHERE status='active' ORDER BY id"); ?>
 <div class="modal fade" id="payModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
-    <form class="modal-content shadow-lg" method="post" id="payForm" action="<?= url('payment_save') ?>">
+    <form class="modal-content card-bento-panel shadow-lg" method="post" id="payForm" action="<?= url('payment_save') ?>">
+      <i class="bi bi-cash-coin panel-watermark"></i>
       <?= csrf_field() ?>
       <input type="hidden" name="membership_id">
-      <div class="modal-header">
-        <h5 class="modal-title"><i class="bi bi-cash-coin text-success me-2 fs-4"></i> Record Payment</h5>
+      <div class="modal-header position-relative" style="z-index:2">
+        <h5 class="modal-title d-flex align-items-center gap-2">
+          <span class="panel-hdr-ico emerald"><i class="bi bi-cash-coin"></i></span>
+          <span>Collect &amp; Verify Payment</span>
+        </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body position-relative" style="z-index:2">
         <div class="p-3 mb-3 rounded-3 bg-body-tertiary border">
           <small class="text-muted d-block text-uppercase">Member &amp; Outstanding Balance</small>
           <strong class="fs-6 text-brand" id="payWho"></strong>
@@ -19,6 +23,11 @@
           <select name="branch_id" class="form-select mb-2" required>
             <?= opts(branch_list(), '', 'id', 'name', 'Select branch facility…') ?>
           </select>
+        <?php else: ?>
+          <div class="mb-2 d-flex align-items-center justify-content-between p-2 px-3 rounded-3 bg-body-tertiary border small">
+            <span class="text-muted">Collecting Facility Node</span>
+            <span class="gate-visit-pill active"><i class="bi bi-geo-alt-fill text-danger"></i> <?= e(short_branch(Auth::user()['branch_name'] ?? '')) ?></span>
+          </div>
         <?php endif; ?>
 
         <label class="form-label small fw-semibold">Amount to Pay *</label>

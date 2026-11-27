@@ -96,7 +96,7 @@ $mode = req('mode', 'standard');
         ['Timestamp', fmt_dt($r['payment_date'])],
         ['Member', $r['full_name'] . ' (' . $r['customer_code'] . ') · ' . $r['phone']],
         ['Subscription Tier', $r['plan_name'] . ' · ' . fmt_date($r['start_date']) . ' → ' . fmt_date($r['end_date'])],
-        ['Facility Node', $r['branch_name']],
+        ['Facility Node', short_branch($r['branch_name'])],
         ['Payment Channel', $r['method_name'] . ($r['reference'] ? ' · Ref: ' . $r['reference'] : '')],
         ['Cashier / Staff', $r['received_name'] ?: '—']
       ] as [$k, $v]): ?>
@@ -108,10 +108,13 @@ $mode = req('mode', 'standard');
         <small class="text-muted text-uppercase fw-bold" style="font-size:0.74rem">Amount Paid</small>
         <div class="brand-font" style="font-size:2.35rem;color:#ff5722;font-weight:800;line-height:1"><?= money($r['amount']) ?></div>
       </div>
-      <div class="text-end small">
-        Plan Price: <strong><?= money($r['price']) ?></strong><br>
-        Total Paid: <strong class="text-success"><?= money($r['amount_paid']) ?></strong><br>
-        <strong class="<?= ($r['price'] - $r['amount_paid']) > 0 ? 'text-danger' : 'text-success' ?>">Balance: <?= money($r['price'] - $r['amount_paid']) ?></strong>
+      <div class="d-flex align-items-center gap-3">
+        <div class="text-end small">
+          Plan Price: <strong><?= money($r['price']) ?></strong><br>
+          Total Paid: <strong class="text-success"><?= money($r['amount_paid']) ?></strong><br>
+          <strong class="<?= ($r['price'] - $r['amount_paid']) > 0 ? 'text-danger' : 'text-success' ?>">Balance: <?= money($r['price'] - $r['amount_paid']) ?></strong>
+        </div>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&margin=0&data=<?= urlencode($r['receipt_no']) ?>" width="64" height="64" class="rounded border p-1 bg-white" alt="QR">
       </div>
     </div>
   </div>
@@ -124,6 +127,7 @@ $mode = req('mode', 'standard');
   <a class="btn btn-whatsapp" target="_blank" href="<?= e(whatsapp_url($r['phone'], "Asc {$r['full_name']}, waad ku mahadsan tahay lacag bixintaada CAATO FITNESS GYM! Rasiidh #: {$r['receipt_no']}, Qadarka: " . money($r['amount']) . " ({$r['plan_name']}). Xubinnimadaadu waxay ku egtahay " . fmt_date($r['end_date']) . ".")) ?>">
     <i class="bi bi-whatsapp"></i> Send WhatsApp Receipt
   </a>
-  <a class="btn btn-outline-light" href="<?= url('customer_view', ['id' => $r['customer_id']]) ?>"><i class="bi bi-arrow-left"></i> Member Profile</a>
+  <a class="btn btn-outline-light" href="<?= url('payments') ?>"><i class="bi bi-receipt-cutoff"></i> Payments Console</a>
+  <a class="btn btn-outline-light" href="<?= url('customer_view', ['id' => $r['customer_id']]) ?>"><i class="bi bi-person-bounding-box"></i> 360° Member Profile</a>
 </div>
 </body></html>
