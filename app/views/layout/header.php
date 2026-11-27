@@ -53,34 +53,41 @@ $pageTitle = $pageTitle ?? 'CAATO FITNESS GYM';
 <body>
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-brand-wrapper">
-    <a class="brand" href="<?= url('dashboard') ?>">
+    <a class="brand brand-pro-card" href="<?= url('dashboard') ?>">
       <span class="logo-tile">
         <img src="<?= asset('img/logo.png') ?>" alt="CAATO FITNESS GYM">
       </span>
       <div class="brand-text-block">
-        <span class="brand-title">CAATO GYM OS</span>
+        <div class="brand-title-row">
+          <span class="brand-title">CAATO</span>
+          <span class="brand-os-pill">OS</span>
+        </div>
+        <span class="brand-sub">FITNESS GYM</span>
         <span class="brand-status-tag"><span class="pulse-dot"></span> 6-BRANCH CLOUD v4.0</span>
       </div>
     </a>
   </div>
-  <nav class="nav flex-column sidebar-nav">
+  <nav class="sidebar-nav">
     <?php foreach ($navGroups as $groupTitle => $items):
       $visible = array_filter($items, fn($it) => Auth::can($it[3]));
       if (!$visible) continue;
     ?>
       <div class="nav-section-title"><?= e($groupTitle) ?></div>
-      <?php foreach ($visible as [$p, $label, $icon, $perm, $tag]): ?>
-        <a class="nav-link <?= PAGE === $p || (in_array(PAGE, ['customer_view', 'customer_edit'], true) && $p === 'customers') ? 'active' : '' ?>" href="<?= url($p) ?>" title="<?= e($label) ?>">
-          <i class="bi <?= $icon ?>"></i>
-          <span><?= e($label) ?></span>
-          <?php if ($tag !== ''): ?><span class="nav-badge"><?= e($tag) ?></span><?php endif; ?>
+      <?php foreach ($visible as [$p, $label, $icon, $perm, $tag]):
+        $isActive = PAGE === $p || (in_array(PAGE, ['customer_view', 'customer_edit'], true) && $p === 'customers');
+        $tagClass = $tag === 'LIVE' ? 'nav-badge-live' : ($tag === 'NEW' ? 'nav-badge-new' : 'nav-badge-count');
+      ?>
+        <a class="nav-link <?= $isActive ? 'active' : '' ?>" href="<?= url($p) ?>" title="<?= e($label) ?>">
+          <span class="nav-icon-wrap"><i class="bi <?= $icon ?>"></i></span>
+          <span class="nav-label"><?= e($label) ?></span>
+          <?php if ($tag !== ''): ?><span class="nav-badge <?= $tagClass ?>"><?= e($tag) ?></span><?php endif; ?>
         </a>
       <?php endforeach; ?>
     <?php endforeach; ?>
   </nav>
   <div class="side-foot">
     <div class="side-foot-chip">
-      <i class="bi bi-geo-alt-fill text-danger fs-5"></i>
+      <span class="side-foot-ico"><i class="bi bi-geo-alt-fill"></i></span>
       <div class="side-foot-info">
         <span class="side-foot-label">ACTIVE FACILITY NODE</span>
         <strong class="side-foot-val"><?= e(Auth::isSuper() ? 'All 6 Branches (HQ)' : (Auth::user()['branch_name'] ?? '')) ?></strong>
@@ -90,37 +97,39 @@ $pageTitle = $pageTitle ?? 'CAATO FITNESS GYM';
 </aside>
 <div class="main">
   <header class="topbar">
-    <div class="d-flex align-items-center gap-2">
+    <div class="topbar-left">
       <button class="btn btn-action-icon d-lg-none" id="menuBtn" aria-label="Menu"><i class="bi bi-list"></i></button>
       <button class="btn btn-action-icon d-none d-lg-inline-grid" id="collapseBtn" title="Toggle compact sidebar"><i class="bi bi-layout-sidebar-inset"></i></button>
-      <div class="topbar-status d-none d-xl-flex align-items-center gap-2">
+
+      <div class="topbar-context d-none d-xxl-flex">
         <span class="status-pulse-dot"></span>
-        <span class="fw-bold tracking-wide text-uppercase" style="font-size:0.74rem;letter-spacing:0.06em">CAATO OS 2026</span>
-        <span class="text-muted">·</span>
-        <span class="text-muted small"><i class="bi bi-diagram-3-fill me-1 text-danger"></i><?= e(Auth::isSuper() ? 'Central Command' : (Auth::user()['branch_name'] ?? '')) ?></span>
+        <span class="topbar-context-label"><?= e(Auth::isSuper() ? 'Central Command' : str_replace('CAATO FITNESS GYM – ', '', Auth::user()['branch_name'] ?? '')) ?></span>
       </div>
+
+      <button type="button" class="btn btn-action-icon d-md-none" data-bs-toggle="modal" data-bs-target="#cmdPaletteModal" aria-label="Quick Search">
+        <i class="bi bi-search text-brand"></i>
+      </button>
+      <button type="button" class="cmd-trigger-btn d-none d-md-inline-flex" data-bs-toggle="modal" data-bs-target="#cmdPaletteModal">
+        <i class="bi bi-search text-brand"></i>
+        <span class="cmd-trigger-text">Search members, ID or commands…</span>
+        <span class="cmd-kbd">Ctrl K</span>
+      </button>
     </div>
 
-    <button type="button" class="btn btn-action-icon d-md-none ms-1" data-bs-toggle="modal" data-bs-target="#cmdPaletteModal" aria-label="Quick Search">
-      <i class="bi bi-search text-brand"></i>
-    </button>
-    <button type="button" class="cmd-trigger-btn d-none d-md-inline-flex ms-2" data-bs-toggle="modal" data-bs-target="#cmdPaletteModal">
-      <i class="bi bi-search text-brand"></i>
-      <span>Quick Search Member or Command…</span>
-      <span class="cmd-kbd">Ctrl K</span>
-    </button>
-
-    <div class="ms-auto d-flex align-items-center gap-2">
-      <div class="live-clock-chip d-none d-lg-inline-flex">
-        <i class="bi bi-clock-fill text-brand"></i>
+    <div class="topbar-right">
+      <div class="live-clock-chip d-none d-xl-inline-flex">
+        <i class="bi bi-clock text-brand"></i>
         <span id="liveClock"><?= date('H:i:s') ?></span>
       </div>
 
       <?php if (Auth::can('attendance.checkin')): ?>
-        <a href="<?= url('attendance') ?>" class="btn btn-sm btn-brand d-none d-sm-inline-flex py-2 px-3" title="Open Biometric & QR Door Scanner">
-          <i class="bi bi-fingerprint"></i> <span class="d-none d-md-inline">Door Check-in</span>
+        <a href="<?= url('attendance') ?>" class="btn btn-topbar-cta d-none d-sm-inline-flex" title="Open Biometric & QR Door Scanner">
+          <i class="bi bi-fingerprint"></i>
+          <span>Check-in</span>
         </a>
       <?php endif; ?>
+
+      <div class="topbar-divider d-none d-sm-block"></div>
 
       <button type="button" class="theme-switch-pill" id="themeBtn" title="Toggle Obsidian Dark / Neo-Light Mode" aria-label="Toggle Theme">
         <span class="theme-switch-track">
@@ -128,7 +137,6 @@ $pageTitle = $pageTitle ?? 'CAATO FITNESS GYM';
           <i class="bi bi-moon-stars-fill theme-ico-moon"></i>
           <span class="theme-switch-thumb"></span>
         </span>
-        <span class="theme-switch-label d-none d-xl-inline" id="themeLabel">DARK</span>
       </button>
 
       <div class="dropdown">
@@ -153,8 +161,8 @@ $pageTitle = $pageTitle ?? 'CAATO FITNESS GYM';
 
       <div class="dropdown">
         <button class="btn btn-user-pill dropdown-toggle" data-bs-toggle="dropdown">
-          <span class="user-avatar-badge"><i class="bi bi-person-fill"></i></span>
-          <span class="user-pill-name d-none d-sm-inline"><?= e(Auth::user()['name'] ?? '') ?></span>
+          <span class="user-avatar-badge"><?= e(strtoupper(mb_substr(Auth::user()['name'] ?? 'A', 0, 1))) ?></span>
+          <span class="user-pill-name d-none d-lg-inline"><?= e(Auth::user()['name'] ?? '') ?></span>
         </button>
         <ul class="dropdown-menu dropdown-menu-end shadow-lg user-menu">
           <li class="px-3 py-2 border-bottom">

@@ -1,17 +1,20 @@
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-  <div>
-    <div class="d-flex align-items-center gap-2 mb-1">
-      <h1 class="page-title">Equipment &amp; Asset Inventory</h1>
-      <span class="badge badge-futuristic"><span class="pulse-dot"></span> 6-BRANCH HARDWARE FLEET</span>
-    </div>
-    <small class="text-muted"><i class="bi bi-tools text-brand me-1"></i> Track treadmills, racks, cables, dumbbells &amp; preventive maintenance schedules</small>
-  </div>
-  <?php if ($canManage): ?>
-    <button class="btn btn-brand" onclick="eqForm()">
-      <i class="bi bi-plus-circle-fill"></i> Register Equipment Asset
-    </button>
-  <?php endif; ?>
-</div>
+<?php
+$eqActs = $canManage ? '<button class="btn btn-brand btn-sm px-3 py-2" onclick="eqForm()"><i class="bi bi-plus-circle-fill"></i> Register Equipment Asset</button>' : '';
+$opCnt = count(array_filter($rows, fn($x) => $x['condition_status'] === 'operational'));
+$alCnt = count($rows) - $opCnt;
+page_banner(
+  '6-BRANCH HARDWARE FLEET · PREVENTIVE MAINTENANCE',
+  'Equipment &amp;',
+  'Asset Inventory',
+  'Track commercial treadmills, racks, cables, free weights & preventive maintenance schedules across every branch.',
+  $eqActs,
+  [
+    [count($rows), 'Total Assets', 'info'],
+    [$opCnt, 'Operational', 'success'],
+    [$alCnt, 'Needs Service', $alCnt > 0 ? 'danger' : 'warning'],
+  ]
+);
+?>
 
 <div class="d-flex flex-wrap gap-2 mb-3">
   <?php foreach ([

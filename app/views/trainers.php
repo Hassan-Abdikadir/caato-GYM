@@ -1,22 +1,21 @@
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-  <div>
-    <div class="d-flex align-items-center gap-2 mb-1">
-      <h1 class="page-title">Fitness Coaches &amp; Trainers</h1>
-      <span class="badge badge-futuristic"><span class="pulse-dot"></span> ATHLETIC COACHING STAFF</span>
-    </div>
-    <small class="text-muted"><i class="bi bi-trophy-fill text-warning me-1"></i> Manage personal trainers, specializations &amp; assigned facility branches</small>
-  </div>
-  <div class="d-flex gap-2">
-    <a href="<?= url('classes') ?>" class="btn btn-outline-secondary">
-      <i class="bi bi-calendar2-week"></i> Workout Classes
-    </a>
-    <?php if ($canManage): ?>
-      <button class="btn btn-brand" onclick="tForm()">
-        <i class="bi bi-person-plus-fill"></i> Add Coach / Trainer
-      </button>
-    <?php endif; ?>
-  </div>
-</div>
+<?php
+$trActs = '<a href="' . url('classes') . '" class="btn btn-sm px-3 py-2" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2)"><i class="bi bi-calendar2-week text-info"></i> Workout Classes</a>';
+if ($canManage) {
+  $trActs .= '<button class="btn btn-brand btn-sm px-3 py-2" onclick="tForm()"><i class="bi bi-person-plus-fill"></i> Add Coach / Trainer</button>';
+}
+$activeTr = count(array_filter($rows, fn($x) => $x['status'] === 'active'));
+page_banner(
+  'ATHLETIC COACHING STAFF · PERSONAL TRAINING',
+  'Coaches &amp;',
+  'Fitness Trainers',
+  'Manage certified personal trainers, athletic specializations, trainee assignments & branch placements.',
+  $trActs,
+  [
+    [count($rows), 'Total Coaches', 'info'],
+    [$activeTr, 'Active Duty', 'success'],
+  ]
+);
+?>
 
 <div class="row g-3">
 <?php foreach ($rows as $r):

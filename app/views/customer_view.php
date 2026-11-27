@@ -13,36 +13,29 @@ $totalDays = ($c['ms_id'] && $c['start_date'] && $c['end_date']) ? max(1, (int) 
 $daysLeft = ($c['ms_id'] && $c['end_date']) ? max(0, (int) floor((strtotime($c['end_date']) - strtotime(date('Y-m-d'))) / 86400)) : 0;
 $pctLeft = $totalDays > 0 ? min(100, max(0, (int) round(($daysLeft / $totalDays) * 100))) : 0;
 ?>
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-  <div class="d-flex align-items-center gap-2">
-    <h1 class="page-title">360° Member Profile</h1>
-    <span class="badge badge-futuristic"><span class="pulse-dot"></span> <?= e($c['customer_code']) ?></span>
-    <?php if (!empty($c['fingerprint_id'])): ?>
-      <span class="badge text-bg-success"><i class="bi bi-fingerprint"></i> Biometric ID: <?= e($c['fingerprint_id']) ?></span>
-    <?php endif; ?>
-  </div>
-  <div class="ms-auto d-flex gap-2 flex-wrap">
-    <a class="btn btn-whatsapp btn-sm" href="<?= e(whatsapp_url($c['phone'], $waRemind)) ?>" target="_blank">
-      <i class="bi bi-whatsapp"></i> WhatsApp Alert
-    </a>
-    <a class="btn btn-outline-secondary btn-sm" href="<?= url('customer_card', ['id' => $c['id']]) ?>" target="_blank">
-      <i class="bi bi-person-vcard-fill text-brand"></i> PVC ID Card
-    </a>
-    <?php if (Auth::can('customers.edit')): ?>
-      <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#fpModal">
-        <i class="bi bi-fingerprint text-success"></i> Biometric Token
-      </button>
-      <a class="btn btn-outline-secondary btn-sm" href="<?= url('customer_edit', ['id' => $c['id']]) ?>">
-        <i class="bi bi-pencil-square text-brand"></i> Edit Profile
-      </a>
-    <?php endif; ?>
-    <?php if (Auth::can('attendance.checkin')): ?>
-      <a class="btn btn-brand btn-sm" href="<?= url('attendance', ['q' => $c['customer_code']]) ?>">
-        <i class="bi bi-door-open-fill"></i> Door Check-in
-      </a>
-    <?php endif; ?>
-  </div>
-</div>
+<?php
+$cvActs = '<a class="btn btn-whatsapp btn-sm px-3 py-2" href="' . e(whatsapp_url($c['phone'], $waRemind)) . '" target="_blank"><i class="bi bi-whatsapp"></i> WhatsApp Alert</a>'
+  . '<a class="btn btn-sm px-3 py-2" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2)" href="' . url('customer_card', ['id' => $c['id']]) . '" target="_blank"><i class="bi bi-person-vcard-fill text-warning"></i> PVC ID Card</a>';
+if (Auth::can('customers.edit')) {
+  $cvActs .= '<button type="button" class="btn btn-sm px-3 py-2" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2)" data-bs-toggle="modal" data-bs-target="#fpModal"><i class="bi bi-fingerprint text-success"></i> Biometric Token</button>'
+    . '<a class="btn btn-sm px-3 py-2" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2)" href="' . url('customer_edit', ['id' => $c['id']]) . '"><i class="bi bi-pencil-square text-info"></i> Edit Profile</a>';
+}
+if (Auth::can('attendance.checkin')) {
+  $cvActs .= '<a class="btn btn-brand btn-sm px-3 py-2" href="' . url('attendance', ['q' => $c['customer_code']]) . '"><i class="bi bi-door-open-fill"></i> Door Check-in</a>';
+}
+page_banner(
+  '360° MEMBER PROFILE · ' . $c['customer_code'] . (!empty($c['fingerprint_id']) ? ' · BIOMETRIC ' . $c['fingerprint_id'] : ''),
+  $c['full_name'],
+  '',
+  'Home Facility: ' . $c['reg_branch'] . ' · Fitness Goal: ' . ($c['fitness_goal'] ?? 'General Fitness'),
+  $cvActs,
+  [
+    [(int) ($c['total_visits'] ?? 0), 'Total Visits', 'info'],
+    [$daysLeft . 'd', 'Days Left', $daysLeft > 7 ? 'success' : 'warning'],
+    [money($balance), 'Balance Due', $balance > 0 ? 'danger' : 'success'],
+  ]
+);
+?>
 
 <div class="row g-3 mb-4">
   <!-- Identity & Biometric Card -->

@@ -1,9 +1,16 @@
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-  <div class="d-flex align-items-center gap-2">
-    <h1 class="page-title">System Settings &amp; Security</h1>
-    <span class="badge badge-futuristic"><span class="pulse-dot"></span> GLOBAL CONFIGURATION</span>
-  </div>
-</div>
+<?php
+page_banner(
+  'GLOBAL CONFIGURATION · CHANNELS, SMTP & SECURITY AUDIT',
+  'System',
+  'Settings',
+  'Configure CAATO FITNESS GYM brand profile, EVC Plus / Salaam Bank / E-Dahab channels, SMTP mail gateway & audit logs.',
+  '',
+  [
+    [count($methods), 'Pay Channels', 'warning'],
+    ['CAATO v4.0', 'Cloud OS', 'success'],
+  ]
+);
+?>
 
 <ul class="nav nav-tabs mb-4">
   <?php 

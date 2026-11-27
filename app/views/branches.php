@@ -1,15 +1,19 @@
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-  <div>
-    <div class="d-flex align-items-center gap-2 mb-1">
-      <h1 class="page-title">6-Branch Facility Network</h1>
-      <span class="badge badge-futuristic"><span class="pulse-dot"></span> CENTRALIZED ENTERPRISE NODES</span>
-    </div>
-    <small class="text-muted"><i class="bi bi-diagram-3-fill text-brand me-1"></i> Manage all CAATO FITNESS GYM branches, local managers, door traffic &amp; monthly revenue</small>
-  </div>
-  <button class="btn btn-brand" onclick="bForm()">
-    <i class="bi bi-building-add"></i> Add Facility Node
-  </button>
-</div>
+<?php
+$totBrRev = array_sum(array_map(fn($x) => (float) $x['revenue_month'], $stats));
+$totBrAct = array_sum(array_map(fn($x) => (int) $x['active_members'], $stats));
+page_banner(
+  'CENTRALIZED ENTERPRISE NODES · 6 UNIFIED FACILITIES',
+  '6-Branch',
+  'Facility Network',
+  'Monitor and configure all CAATO FITNESS GYM branches, local branch managers, door traffic & monthly revenue.',
+  '<button class="btn btn-brand btn-sm px-3 py-2" onclick="bForm()"><i class="bi bi-building-add"></i> Add Facility Node</button>',
+  [
+    [count($stats), 'Facility Nodes', 'info'],
+    [$totBrAct, 'Active Members', 'success'],
+    [money($totBrRev), 'Month Revenue', 'warning'],
+  ]
+);
+?>
 
 <!-- 2026 Bento Branch Node Cards -->
 <div class="row g-3 mb-4">

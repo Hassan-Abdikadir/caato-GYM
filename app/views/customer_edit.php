@@ -1,7 +1,12 @@
-<div class="d-flex align-items-center gap-2 mb-3">
-  <h1 class="page-title">Edit Customer Profile</h1>
-  <span class="badge badge-futuristic"><span class="pulse-dot"></span> <?= e($c['customer_code']) ?></span>
-</div>
+<?php
+page_banner(
+  'PROFILE CONFIGURATION · ' . $c['customer_code'],
+  'Edit Member',
+  $c['full_name'],
+  'Update personal contact info, fitness goal, assigned personal coach, biometric door token & account clearance.',
+  '<a class="btn btn-sm px-3 py-2" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2)" href="' . url('customer_view', ['id' => $id]) . '"><i class="bi bi-arrow-left"></i> Back to 360° Profile</a>'
+);
+?>
 
 <form method="post" enctype="multipart/form-data" class="card shadow-sm">
   <?= csrf_field() ?>

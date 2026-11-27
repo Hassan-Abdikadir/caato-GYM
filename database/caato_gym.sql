@@ -367,3 +367,13 @@ INSERT INTO settings (skey,svalue) VALUES
 -- Default Super Admin  ->  username: admin   password: Admin@12345   (CHANGE IT AFTER FIRST LOGIN)
 INSERT INTO users (full_name,username,email,password_hash,role_id,branch_id)
 SELECT 'System Super Admin','admin','admin@caatofitness.local','$2b$12$U.56e28/UVPhCqUG4ega3uDknRlvLHtWTCmvG8zRQuyLGcCuOT/vm',id,NULL FROM roles WHERE name='super_admin';
+
+-- Official Default Staff Role Accounts (Assigned to Branch 1 by default)
+INSERT IGNORE INTO users (full_name,username,email,password_hash,role_id,branch_id)
+SELECT 'Branch 1 Manager','manager','manager@caatofitness.local','$2y$10$w8S7U/eG.8N.6A6aW6aW6u7v3mK9.P5bQ2sR1tY8uI0oP3aS4dF5g',r.id,b.id FROM roles r, branches b WHERE r.name='branch_manager' AND b.code='B1';
+INSERT IGNORE INTO users (full_name,username,email,password_hash,role_id,branch_id)
+SELECT 'Front Desk Receptionist','reception','reception@caatofitness.local','$2y$10$w8S7U/eG.8N.6A6aW6aW6u7v3mK9.P5bQ2sR1tY8uI0oP3aS4dF5g',r.id,b.id FROM roles r, branches b WHERE r.name='receptionist' AND b.code='B1';
+INSERT IGNORE INTO users (full_name,username,email,password_hash,role_id,branch_id)
+SELECT 'Chief Accountant','accountant','accountant@caatofitness.local','$2y$10$w8S7U/eG.8N.6A6aW6aW6u7v3mK9.P5bQ2sR1tY8uI0oP3aS4dF5g',r.id,b.id FROM roles r, branches b WHERE r.name='accountant' AND b.code='B1';
+INSERT IGNORE INTO users (full_name,username,email,password_hash,role_id,branch_id)
+SELECT 'Head Fitness Coach','trainer','trainer@caatofitness.local','$2y$10$w8S7U/eG.8N.6A6aW6aW6u7v3mK9.P5bQ2sR1tY8uI0oP3aS4dF5g',r.id,b.id FROM roles r, branches b WHERE r.name='trainer' AND b.code='B1';

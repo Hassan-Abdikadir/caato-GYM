@@ -1,15 +1,18 @@
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-  <div>
-    <div class="d-flex align-items-center gap-2 mb-1">
-      <h1 class="page-title">User Accounts &amp; RBAC Security</h1>
-      <span class="badge badge-futuristic"><span class="pulse-dot"></span> ZERO-TRUST ACCESS CONTROL</span>
-    </div>
-    <small class="text-muted"><i class="bi bi-shield-lock-fill text-brand me-1"></i> Super Admins control all 6 branches; Branch Managers, Receptionists, Accountants &amp; Trainers are scoped to their facility</small>
-  </div>
-  <button class="btn btn-brand" onclick="uForm()">
-    <i class="bi bi-person-plus-fill"></i> New User Account
-  </button>
-</div>
+<?php
+$activeUsr = count(array_filter($rows, fn($x) => $x['status'] === 'active'));
+page_banner(
+  'ZERO-TRUST ACCESS CONTROL · ROLE-BASED PERMISSIONS',
+  'Access &amp;',
+  'RBAC Users',
+  'Super Admins command all 6 branches; Branch Managers, Receptionists, Accountants & Trainers are securely scoped.',
+  '<button class="btn btn-brand btn-sm px-3 py-2" onclick="uForm()"><i class="bi bi-person-plus-fill"></i> New User Account</button>',
+  [
+    [count($rows), 'Total Accounts', 'info'],
+    [$activeUsr, 'Active Logins', 'success'],
+    [count($roles), 'RBAC Roles', 'warning'],
+  ]
+);
+?>
 
 <div class="row g-2 mb-4">
   <?php

@@ -1,9 +1,16 @@
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-  <div class="d-flex align-items-center gap-2">
-    <h1 class="page-title">Operating Expenses</h1>
-    <span class="badge badge-futuristic"><span class="pulse-dot"></span> EXPENDITURE LEDGER</span>
-  </div>
-</div>
+<?php
+page_banner(
+  'EXPENDITURE LEDGER · FACILITY COST CONTROL',
+  'Operating',
+  'Expenses',
+  'Record rent, utilities, equipment maintenance, salaries & daily operating expenditures across all 6 branches.',
+  '',
+  [
+    [money($total), 'Period Total', 'danger'],
+    [(int) ($pg['total'] ?? 0), 'Expense Entries', 'warning'],
+  ]
+);
+?>
 
 <?php if (!empty($catBreakdown)): ?>
 <div class="row g-2 mb-4">

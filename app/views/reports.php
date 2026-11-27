@@ -1,12 +1,16 @@
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-  <div>
-    <div class="d-flex align-items-center gap-2 mb-1">
-      <h1 class="page-title">Reports &amp; Data Intelligence</h1>
-      <span class="badge badge-futuristic"><span class="pulse-dot"></span> ENTERPRISE ANALYTICS &amp; EXPORT</span>
-    </div>
-    <small class="text-muted"><i class="bi bi-graph-up-arrow text-brand me-1"></i> Generate real-time financial, attendance, membership, POS &amp; equipment reports with PDF / Excel export</small>
-  </div>
-</div>
+<?php
+page_banner(
+  'ENTERPRISE ANALYTICS & EXPORT · PDF & EXCEL (.XLSX)',
+  'Reports &amp;',
+  'Data Intelligence',
+  'Generate real-time financial, attendance, membership, POS supplement bar & equipment reports across all 6 branches.',
+  '',
+  [
+    [count(Report::TYPES), 'Report Models', 'info'],
+    ['PDF & XLSX', 'Export Ready', 'success'],
+  ]
+);
+?>
 
 <!-- Quick Report Preset Pills -->
 <div class="d-flex flex-wrap gap-2 mb-3">

@@ -1,20 +1,19 @@
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-  <div>
-    <div class="d-flex align-items-center gap-2 mb-1">
-      <h1 class="page-title">Biometric &amp; QR Door Console</h1>
-      <span class="badge badge-futuristic"><span class="pulse-dot"></span> UNIVERSAL 6-BRANCH GATE</span>
-    </div>
-    <small class="text-muted"><i class="bi bi-broadcast text-danger me-1"></i> Fingerprint Biometric Terminal, Optical Camera QR Scanner &amp; Instant Cross-Branch Verification</small>
-  </div>
-  <div class="d-flex gap-2">
-    <button type="button" class="btn btn-outline-secondary btn-sm" id="soundToggleBtn" onclick="toggleAudio()">
-      <i class="bi bi-volume-up-fill text-success"></i> Door Audio: ON
-    </button>
-    <button type="button" class="btn btn-outline-brand btn-sm" onclick="toggleKiosk()">
-      <i class="bi bi-arrows-fullscreen"></i> Fullscreen Kiosk
-    </button>
-  </div>
-</div>
+<?php
+$todayAllVisits = array_sum(array_map(fn($x) => (int) $x['attendance_today'], $stats));
+page_banner(
+  'UNIVERSAL 6-BRANCH GATE · LIVE BIOMETRIC & QR',
+  'Biometric & QR',
+  'Door Console',
+  'Fingerprint Biometric Terminal, Optical Camera QR Scanner & Instant Cross-Branch Member Verification.',
+  '<button type="button" class="btn btn-sm px-3 py-2" id="soundToggleBtn" onclick="toggleAudio()" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2)"><i class="bi bi-volume-up-fill text-success"></i> Door Audio: ON</button>'
+  . '<button type="button" class="btn btn-brand btn-sm px-3 py-2" onclick="toggleKiosk()"><i class="bi bi-arrows-fullscreen"></i> Fullscreen Kiosk</button>',
+  [
+    [$todayAllVisits, 'Today Visits', 'success'],
+    [count($stats), 'Active Gates', 'info'],
+    ['1 / Day', 'Gate Rule', 'warning'],
+  ]
+);
+?>
 
 <!-- 6-Branch Today's Attendance Telemetry Bar -->
 <div class="row g-2 mb-4">

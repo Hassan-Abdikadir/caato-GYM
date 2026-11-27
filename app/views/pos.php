@@ -1,21 +1,20 @@
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-  <div>
-    <div class="d-flex align-items-center gap-2 mb-1">
-      <h1 class="page-title">POS &amp; Supplement Bar</h1>
-      <span class="badge badge-futuristic"><span class="pulse-dot"></span> INSTANT RETAIL &amp; SHAKES</span>
-    </div>
-    <small class="text-muted"><i class="bi bi-cup-straw text-brand me-1"></i> Protein Shakes, Pre-Workout, Hydration &amp; Athletic Gear Point-of-Sale across all 6 facilities</small>
-  </div>
-  <div class="d-flex gap-2 align-items-center">
-    <span class="badge text-bg-success fs-6 py-2 px-3">Today POS: <?= money($todayTotal) ?></span>
-    <span class="badge text-bg-info fs-6 py-2 px-3">Month POS: <?= money($monthTotal) ?></span>
-    <?php if (Auth::can('plans.manage')): ?>
-      <button class="btn btn-brand" onclick="prodForm()">
-        <i class="bi bi-plus-circle-fill"></i> Add Product / Restock
-      </button>
-    <?php endif; ?>
-  </div>
-</div>
+<?php
+$posActs = Auth::can('plans.manage')
+  ? '<button class="btn btn-brand btn-sm px-3 py-2" onclick="prodForm()"><i class="bi bi-plus-circle-fill"></i> Add Product / Restock</button>'
+  : '';
+page_banner(
+  'INSTANT RETAIL & SHAKES · 6-BRANCH POINT OF SALE',
+  'POS &amp;',
+  'Supplement Bar',
+  'Sell protein shakes, pre-workout shots, hydration drinks & athletic gear with automated real-time stock tracking.',
+  $posActs,
+  [
+    [money($todayTotal), 'Today POS', 'success'],
+    [money($monthTotal), 'Month POS', 'warning'],
+    [count($products), 'Catalog Items', 'info'],
+  ]
+);
+?>
 
 <!-- Product Catalog Grid -->
 <div class="row g-3 mb-4">

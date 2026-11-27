@@ -130,6 +130,36 @@ function scope_branch(string $col, $requested = null): array
     return ['', []];
 }
 
+/** Renders the signature CAATO 2026 Cyber Hero Banner for any page section */
+function page_banner(string $badge, string $title, string $accent, string $subtitle, string $actionsHtml = '', array $metrics = []): void
+{
+    echo '<div class="cyber-hero mb-4"><div class="row g-3 align-items-center position-relative" style="z-index:2">';
+    echo '<div class="' . ($metrics ? 'col-xl-8' : 'col-12 d-flex flex-wrap align-items-center justify-content-between gap-3') . '">';
+    echo '<div>';
+    echo '<div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-2" style="background:rgba(255,87,34,0.18);border:1px solid rgba(255,87,34,0.4);font-size:0.72rem;font-weight:700;letter-spacing:0.08em;color:#ffab91">';
+    echo '<span class="pulse-dot"></span> ' . e(strtoupper($badge)) . '</div>';
+    echo '<h1 class="display-6 fw-bold text-white mb-1" style="font-family:\'Barlow Condensed\',sans-serif;letter-spacing:0.02em;line-height:1.05">'
+        . e($title) . ($accent !== '' ? ' <span style="color:#ff7043">' . e($accent) . '</span>' : '') . '</h1>';
+    echo '<p class="mb-' . ($actionsHtml !== '' && $metrics ? '3' : '0') . ' text-white-50 small" style="max-width:660px">' . e($subtitle) . '</p>';
+    echo '</div>';
+    if ($actionsHtml !== '') {
+        echo '<div class="d-flex flex-wrap gap-2 align-items-center' . ($metrics ? ' mt-3' : ' ms-auto') . '">' . $actionsHtml . '</div>';
+    }
+    echo '</div>';
+    if ($metrics) {
+        echo '<div class="col-xl-4"><div class="p-2 px-3 rounded-4" style="background:rgba(15,23,42,0.65);border:1px solid rgba(255,255,255,0.12);backdrop-filter:blur(12px)"><div class="row g-2 text-center">';
+        $colCls = count($metrics) === 2 ? 'col-6' : (count($metrics) === 1 ? 'col-12' : 'col-4');
+        foreach ($metrics as [$val, $lbl, $clr]) {
+            echo '<div class="' . $colCls . '"><div class="p-2 rounded-3" style="background:rgba(255,255,255,0.05)">';
+            echo '<div class="fw-bold fs-4 text-' . e($clr) . '" style="font-family:\'Barlow Condensed\'">' . e($val) . '</div>';
+            echo '<small class="text-white-50 d-block text-truncate" style="font-size:0.65rem;letter-spacing:0.06em">' . e(strtoupper($lbl)) . '</small>';
+            echo '</div></div>';
+        }
+        echo '</div></div></div>';
+    }
+    echo '</div></div>';
+}
+
 function render(string $view, array $d = []): void
 {
     extract($d);

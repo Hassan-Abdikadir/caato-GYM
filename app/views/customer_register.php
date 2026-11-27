@@ -1,10 +1,12 @@
-<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-  <div class="d-flex align-items-center gap-2">
-    <h1 class="page-title">Register New Member</h1>
-    <span class="badge badge-futuristic"><span class="pulse-dot"></span> UNIVERSAL 6-BRANCH PASS</span>
-  </div>
-  <a href="<?= url('customers') ?>" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Member Directory</a>
-</div>
+<?php
+page_banner(
+  'UNIVERSAL 6-BRANCH PASS · NEW MEMBER ONBOARDING',
+  'Register',
+  'New Member',
+  'Enroll a new athlete once — instantly synchronized with biometric door access, digital PVC card & all 6 CAATO facilities.',
+  '<a href="' . url('customers') . '" class="btn btn-sm px-3 py-2" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2)"><i class="bi bi-arrow-left"></i> Member Directory</a>'
+);
+?>
 
 <form method="post" enctype="multipart/form-data">
 <?= csrf_field() ?>

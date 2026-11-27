@@ -1,12 +1,12 @@
 <?php
-// Database & application configuration (XAMPP defaults)
+// Database & application configuration (Local MySQL defaults; remote InfinityFree fallback in comment)
 return [
     'db' => [
-        'host' => 'sql103.infinityfree.com',
+        'host' => '127.0.0.1',
         'port' => '3306',
-        'name' => 'if0_43356606_caatogym',
-        'user' => 'if0_43356606',
-        'pass' => 'GymWeb2026X92', 
+        'name' => 'caato_gym',
+        'user' => 'root',
+        'pass' => '',
         'charset' => 'utf8mb4',
     ],
     'timezone' => 'Africa/Mogadishu',

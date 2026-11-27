@@ -1,14 +1,18 @@
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-  <div class="d-flex align-items-center gap-2">
-    <h1 class="page-title">Financial &amp; Payment Console</h1>
-    <span class="badge badge-futuristic"><span class="pulse-dot"></span> MULTI-BRANCH REVENUE</span>
-  </div>
-  <?php if (Auth::can('reports.view')): ?>
-    <a href="<?= url('export', ['type' => 'daily_payments', 'branch' => $br, 'date_from' => $df, 'date_to' => $dt, 'format' => 'xlsx']) ?>" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-file-earmark-excel-fill text-success"></i> Export Payments Excel
-    </a>
-  <?php endif; ?>
-</div>
+<?php
+$payActs = Auth::can('reports.view')
+  ? '<a href="' . url('export', ['type' => 'daily_payments', 'branch' => $br, 'date_from' => $df, 'date_to' => $dt, 'format' => 'xlsx']) . '" class="btn btn-sm px-3 py-2" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2)"><i class="bi bi-file-earmark-excel-fill text-success"></i> Export Excel</a>'
+  : '';
+page_banner(
+  'MULTI-BRANCH REVENUE · EVC PLUS / SALAAM BANK / E-DAHAB',
+  'Financial &amp;',
+  'Payment Console',
+  'Track verified membership payments, collect outstanding balances, and issue 80mm thermal or PDF receipts.',
+  $payActs,
+  $tab === 'pending'
+    ? [[money($outstanding), 'Outstanding Due', 'danger'], [count($rows), 'Unpaid Accounts', 'warning']]
+    : [[money($sum), 'Filtered Total', 'success'], [(int) ($pg['total'] ?? 0), 'Verified Txns', 'info']]
+);
+?>
 
 <ul class="nav nav-tabs mb-4">
   <li class="nav-item">

@@ -185,6 +185,55 @@ final class DB
                     ('POS-005', 'CAATO Pro Lifting Gloves', 'Gear & Apparel', 12.00, 40, 'active'),
                     ('POS-006', 'Creatine Monohydrate (300g Tub)', 'Supplements', 22.00, 25, 'active')");
             }
+
+            // 6. Seed official default staff accounts for all 4 branch roles if not present
+            $b1 = (int) self::pdo()->query("SELECT id FROM branches ORDER BY id LIMIT 1")->fetchColumn();
+            if ($b1 > 0) {
+                $staffSeeds = [
+                    ['Branch 1 Manager', 'manager', 'manager@caatofitness.local', 'Manager@12345', 'branch_manager', 'Branch Manager'],
+                    ['Front Desk Receptionist', 'reception', 'reception@caatofitness.local', 'Reception@12345', 'receptionist', 'Front Desk Receptionist'],
+                    ['Chief Accountant', 'accountant', 'accountant@caatofitness.local', 'Accountant@12345', 'accountant', 'Senior Accountant'],
+                    ['Head Fitness Coach', 'trainer', 'trainer@caatofitness.local', 'Trainer@12345', 'trainer', 'Head Fitness Coach'],
+                ];
+                foreach ($staffSeeds as [$fn, $un, $em, $pw, $rn, $pos]) {
+                    $exists = (int) self::val("SELECT id FROM users WHERE username=?", [$un]);
+                    if (!$exists) {
+                        $rid = (int) self::val("SELECT id FROM roles WHERE name=?", [$rn]);
+                        if ($rid) {
+                            $uid = self::insert('users', [
+                                'full_name' => $fn,
+                                'username' => $un,
+                                'email' => $em,
+                                'password_hash' => password_hash($pw, PASSWORD_DEFAULT),
+                                'role_id' => $rid,
+                                'branch_id' => $b1,
+                                'status' => 'active',
+                            ]);
+                            self::insert('employees', [
+                                'user_id' => $uid,
+                                'full_name' => $fn,
+                                'phone' => '0615000' . $uid,
+                                'email' => $em,
+                                'position' => $pos,
+                                'role_id' => $rid,
+                                'branch_id' => $b1,
+                                'salary' => 450.00,
+                                'joining_date' => date('Y-m-d'),
+                                'status' => 'active',
+                            ]);
+                            if ($rn === 'trainer') {
+                                self::insert('trainers', [
+                                    'full_name' => $fn,
+                                    'phone' => '0615000' . $uid,
+                                    'specialization' => 'Strength, HIIT & Body Transformation',
+                                    'branch_id' => $b1,
+                                    'status' => 'active',
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
         } catch (Throwable $e) {
             // Gracefully ignore migration errors if DB is uninitialized
         }

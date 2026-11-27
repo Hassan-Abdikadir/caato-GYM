@@ -1,27 +1,24 @@
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-  <div>
-    <div class="d-flex align-items-center gap-2 mb-1">
-      <h1 class="page-title">Group Classes &amp; Workout Timetable</h1>
-      <span class="badge badge-futuristic"><span class="pulse-dot"></span> STUDIO &amp; FLOOR SCHEDULE</span>
-    </div>
-    <small class="text-muted"><i class="bi bi-calendar2-week-fill text-brand me-1"></i> HIIT, CrossFit, Boxing, Strength &amp; Aerobics sessions scheduled across all 6 branches</small>
-  </div>
-  <div class="d-flex gap-2">
-    <?php if (Auth::isSuper()): ?>
-    <form method="get">
-      <input type="hidden" name="page" value="classes">
-      <select name="branch" class="form-select" onchange="this.form.submit()">
-        <?= opts(branch_list(false), $br, 'id', 'name', 'All 6 Branches') ?>
-      </select>
-    </form>
-    <?php endif; ?>
-    <?php if ($canManage): ?>
-      <button class="btn btn-brand" onclick="cForm()">
-        <i class="bi bi-plus-circle-fill"></i> Schedule New Class
-      </button>
-    <?php endif; ?>
-  </div>
-</div>
+<?php
+$clsActs = '';
+if (Auth::isSuper()) {
+  $clsActs .= '<form method="get" class="d-inline-block"><input type="hidden" name="page" value="classes"><select name="branch" class="form-select form-select-sm bg-dark text-white border-secondary fw-semibold" onchange="this.form.submit()">' . opts(branch_list(false), $br, 'id', 'name', 'All 6 Branches') . '</select></form>';
+}
+if ($canManage) {
+  $clsActs .= '<button class="btn btn-brand btn-sm px-3 py-2" onclick="cForm()"><i class="bi bi-plus-circle-fill"></i> Schedule New Class</button>';
+}
+$activeCls = count(array_filter($rows, fn($x) => $x['status'] === 'active'));
+page_banner(
+  'STUDIO & FLOOR SCHEDULE · GROUP ATHLETIC TRAINING',
+  'Classes &amp;',
+  'Workout Timetable',
+  'Manage HIIT, CrossFit, Boxing, Strength & Aerobics sessions scheduled across all six CAATO facilities.',
+  $clsActs,
+  [
+    [$activeCls, 'Active Classes', 'success'],
+    [count($trainers), 'Coaches Ready', 'warning'],
+  ]
+);
+?>
 
 <div class="row g-3">
 <?php foreach ($rows as $r): ?>

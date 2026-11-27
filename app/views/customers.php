@@ -1,24 +1,24 @@
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-  <div>
-    <div class="d-flex align-items-center gap-2 mb-1">
-      <h1 class="page-title">Customer Directory</h1>
-      <span class="badge badge-futuristic"><span class="pulse-dot"></span> 6 BRANCHES UNIFIED</span>
-    </div>
-    <small class="text-muted"><i class="bi bi-shield-check text-success me-1"></i> Centralized member network — <?= (int) ($counts['total'] ?? 0) ?> profiles · <?= (int) ($counts['active'] ?? 0) ?> active passes · <?= (int) ($counts['biometric'] ?? 0) ?> biometric enrolled</small>
-  </div>
-  <div class="d-flex gap-2">
-    <?php if (Auth::can('reports.view')): ?>
-      <a href="<?= url('export', ['type' => 'customers', 'branch' => $br, 'format' => 'xlsx']) ?>" class="btn btn-outline-secondary">
-        <i class="bi bi-file-earmark-excel-fill text-success"></i> Export Excel
-      </a>
-    <?php endif; ?>
-    <?php if (Auth::can('customers.create')): ?>
-      <a href="<?= url('customer_register') ?>" class="btn btn-brand">
-        <i class="bi bi-person-plus-fill"></i> Register New Member
-      </a>
-    <?php endif; ?>
-  </div>
-</div>
+<?php
+$custActs = '';
+if (Auth::can('customers.create')) {
+  $custActs .= '<a href="' . url('customer_register') . '" class="btn btn-brand btn-sm px-3 py-2"><i class="bi bi-person-plus-fill"></i> Register New Member</a>';
+}
+if (Auth::can('reports.view')) {
+  $custActs .= '<a href="' . url('export', ['type' => 'customers', 'branch' => $br, 'format' => 'xlsx']) . '" class="btn btn-sm px-3 py-2" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2)"><i class="bi bi-file-earmark-excel-fill text-success"></i> Export Excel</a>';
+}
+page_banner(
+  '6 BRANCHES UNIFIED · CENTRALIZED PROFILE DATABASE',
+  'Customer',
+  'Directory',
+  'Search, filter, and manage every member across all six CAATO FITNESS GYM branches from one unified cloud directory.',
+  $custActs,
+  [
+    [(int) ($counts['total'] ?? 0), 'Total Members', 'info'],
+    [(int) ($counts['active'] ?? 0), 'Active Passes', 'success'],
+    [(int) ($counts['biometric'] ?? 0), 'Biometric IDs', 'warning'],
+  ]
+);
+?>
 
 <!-- Quick Status Filter Pills -->
 <div class="d-flex flex-wrap gap-2 mb-3">

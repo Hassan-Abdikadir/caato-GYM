@@ -1,14 +1,20 @@
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-  <div class="d-flex align-items-center gap-2">
-    <h1 class="page-title">Memberships &amp; Plan Tiers</h1>
-    <span class="badge badge-futuristic"><span class="pulse-dot"></span> SUBSCRIPTION ENGINE</span>
-  </div>
-  <?php if ($tab === 'plans' && Auth::can('plans.manage')): ?>
-    <button class="btn btn-brand" onclick="planForm()">
-      <i class="bi bi-plus-circle-fill"></i> Create New Plan Tier
-    </button>
-  <?php endif; ?>
-</div>
+<?php
+$msActs = ($tab === 'plans' && Auth::can('plans.manage'))
+  ? '<button class="btn btn-brand btn-sm px-3 py-2" onclick="planForm()"><i class="bi bi-plus-circle-fill"></i> Create New Plan Tier</button>'
+  : (Auth::can('customers.create') ? '<a href="' . url('customer_register') . '" class="btn btn-brand btn-sm px-3 py-2"><i class="bi bi-person-plus-fill"></i> Sell New Membership</a>' : '');
+$activePlansCnt = count(array_filter($plans, fn($x) => $x['status'] === 'active'));
+page_banner(
+  'SUBSCRIPTION ENGINE · 6-BRANCH UNIVERSAL PASSES',
+  'Memberships &amp;',
+  'Plan Tiers',
+  'Manage member subscriptions, renewal lifecycles, validity countdowns & pricing plans across all six facilities.',
+  $msActs,
+  [
+    [$activePlansCnt, 'Active Plans', 'warning'],
+    [(int) ($pg['total'] ?? 0), 'Subscriptions', 'info'],
+  ]
+);
+?>
 
 <ul class="nav nav-tabs mb-4">
   <li class="nav-item">

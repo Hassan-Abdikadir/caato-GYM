@@ -1,22 +1,21 @@
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-  <div>
-    <div class="d-flex align-items-center gap-2 mb-1">
-      <h1 class="page-title">Staff &amp; Workforce</h1>
-      <span class="badge badge-futuristic"><span class="pulse-dot"></span> HR &amp; PAYROLL LEDGER</span>
-    </div>
-    <small class="text-muted"><i class="bi bi-person-badge-fill text-brand me-1"></i> Manage receptionists, accountants, trainers &amp; system login credentials across 6 branches</small>
-  </div>
-  <div class="d-flex gap-2">
-    <?php if (Auth::can('reports.view')): ?>
-      <a href="<?= url('export', ['type' => 'employees', 'branch' => $br, 'format' => 'xlsx']) ?>" class="btn btn-outline-secondary">
-        <i class="bi bi-file-earmark-excel-fill text-success"></i> Export Payroll Excel
-      </a>
-    <?php endif; ?>
-    <button class="btn btn-brand" onclick="eForm()">
-      <i class="bi bi-person-plus-fill"></i> Add Staff Member
-    </button>
-  </div>
-</div>
+<?php
+$empActs = '';
+if (Auth::can('reports.view')) {
+  $empActs .= '<a href="' . url('export', ['type' => 'employees', 'branch' => $br, 'format' => 'xlsx']) . '" class="btn btn-sm px-3 py-2" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2)"><i class="bi bi-file-earmark-excel-fill text-success"></i> Export Payroll Excel</a>';
+}
+$empActs .= '<button class="btn btn-brand btn-sm px-3 py-2" onclick="eForm()"><i class="bi bi-person-plus-fill"></i> Add Staff Member</button>';
+page_banner(
+  'HR & PAYROLL LEDGER · WORKFORCE OPERATIONS',
+  'Staff &amp;',
+  'Workforce',
+  'Manage receptionists, accountants, coaches, monthly payroll & branch login credentials across all 6 facilities.',
+  $empActs,
+  [
+    [(int) ($pg['total'] ?? 0), 'Total Staff', 'info'],
+    [count($branches), 'Active Branches', 'success'],
+  ]
+);
+?>
 
 <div class="card mb-4 shadow-sm">
   <div class="card-body p-3 bg-body-tertiary">

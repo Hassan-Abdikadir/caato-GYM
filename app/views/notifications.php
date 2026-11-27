@@ -1,24 +1,17 @@
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-  <div class="d-flex align-items-center gap-2">
-    <h1 class="page-title">Notification Hub</h1>
-    <span class="badge badge-futuristic"><span class="pulse-dot"></span> REALTIME ALERTS</span>
-  </div>
-  <div class="ms-auto d-flex gap-2">
-    <form method="post">
-      <?= csrf_field() ?>
-      <button class="btn btn-brand btn-sm">
-        <i class="bi bi-check2-all"></i> Mark All Read
-      </button>
-    </form>
-    <form method="post">
-      <?= csrf_field() ?>
-      <input type="hidden" name="action" value="clear_read">
-      <button class="btn btn-outline-danger btn-sm" data-confirm="Clear all read notifications?">
-        <i class="bi bi-trash3"></i> Clear Read
-      </button>
-    </form>
-  </div>
-</div>
+<?php
+$notifActs = '<form method="post" class="d-inline">' . csrf_field() . '<button class="btn btn-brand btn-sm px-3 py-2"><i class="bi bi-check2-all"></i> Mark All Read</button></form>'
+  . '<form method="post" class="d-inline">' . csrf_field() . '<input type="hidden" name="action" value="clear_read"><button class="btn btn-sm px-3 py-2" style="background:rgba(225,29,72,0.2);color:#fda4af;border:1px solid rgba(225,29,72,0.4)" data-confirm="Clear all read notifications?"><i class="bi bi-trash3"></i> Clear Read</button></form>';
+page_banner(
+  'REALTIME ALERTS · EXPIRY & PAYMENT TELEMETRY',
+  'Notification',
+  'Hub',
+  'Stay ahead of expiring memberships, pending balances, renewals & cross-branch payment confirmations.',
+  $notifActs,
+  [
+    [(int) ($pg['total'] ?? 0), 'Total Alerts', 'info'],
+  ]
+);
+?>
 
 <div class="mb-4 d-flex flex-wrap gap-2">
   <?php foreach ([
