@@ -54,7 +54,9 @@ final class Attendance
             try { $data['checkin_method'] = $method; } catch (Throwable $e) {}
             $id = DB::insert('attendance', $data);
         } catch (PDOException $e) {
-            if ((int) ($e->errorInfo[1] ?? 0) === 1062) {
+            $errCode = (int) ($e->errorInfo[1] ?? 0);
+            $isDup = ($errCode === 1062) || ($errCode === 19 && stripos($e->getMessage(), 'UNIQUE') !== false);
+            if ($isDup) {
                 $prev = DB::one('SELECT a.check_in_at, b.name FROM attendance a JOIN branches b ON b.id=a.branch_id WHERE a.customer_id=? AND a.attendance_date=CURDATE()', [$customerId]);
                 $prevTime = date('h:i A', strtotime($prev['check_in_at'] ?? $now));
                 $prevBranch = short_branch($prev['name'] ?? 'This branch');

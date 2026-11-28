@@ -1,5 +1,6 @@
 # Logs & temporary files
 storage/error.log
+storage/*.sqlite*
 *.tmp
 .DS_Store
 Thumbs.db

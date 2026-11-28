@@ -1,8 +1,46 @@
 <?php
 final class Auth
 {
+    private static function tokenSecret(): string
+    {
+        return getenv('APP_SECRET') ?: 'caato-os-v4-hmac-key-2026-secure';
+    }
+
+    private static function setAuthCookie(array $user): void
+    {
+        if (headers_sent()) return;
+        $payload = base64_encode((string) json_encode(['u' => $user, 't' => time()]));
+        $sig = hash_hmac('sha256', $payload, self::tokenSecret());
+        $isHttps = !empty($_SERVER['HTTPS']) || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+        setcookie('CAATOAUTH', $payload . '.' . $sig, [
+            'expires' => 0, 'path' => '/', 'httponly' => true,
+            'samesite' => 'Lax', 'secure' => $isHttps,
+        ]);
+    }
+
+    private static function clearAuthCookie(): void
+    {
+        if (headers_sent()) return;
+        $isHttps = !empty($_SERVER['HTTPS']) || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+        setcookie('CAATOAUTH', '', [
+            'expires' => time() - 3600, 'path' => '/', 'httponly' => true,
+            'samesite' => 'Lax', 'secure' => $isHttps,
+        ]);
+    }
+
     public static function boot(): void
     {
+        if (!self::check() && !empty($_COOKIE['CAATOAUTH'])) {
+            $parts = explode('.', (string) $_COOKIE['CAATOAUTH'], 2);
+            if (count($parts) === 2 && hash_equals(hash_hmac('sha256', $parts[0], self::tokenSecret()), $parts[1])) {
+                $data = json_decode((string) base64_decode($parts[0], true), true);
+                $max = (int) cfg('session_minutes') * 60;
+                if (is_array($data) && !empty($data['u']['id']) && (time() - (int) ($data['t'] ?? 0)) <= $max) {
+                    $_SESSION['user'] = $data['u'];
+                    $_SESSION['last'] = time();
+                }
+            }
+        }
         if (self::check()) {
             $max = (int) cfg('session_minutes') * 60;
             if (isset($_SESSION['last']) && time() - $_SESSION['last'] > $max) {
@@ -84,6 +122,7 @@ final class Auth
         $_SESSION['perms'] = array_column(DB::all(
             "SELECT p.perm_key FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE rp.role_id=?", [$u['role_id']]), 'perm_key');
         $_SESSION['last'] = time();
+        self::setAuthCookie($_SESSION['user']);
         audit('login', 'user', (int) $u['id'], 'Signed in');
         return [true, 'ok'];
     }
@@ -92,6 +131,7 @@ final class Auth
     {
         if (self::check()) audit('logout', 'user', self::id(), 'Signed out');
         $_SESSION = [];
+        self::clearAuthCookie();
         if (!headers_sent()) session_regenerate_id(true);
     }
 }

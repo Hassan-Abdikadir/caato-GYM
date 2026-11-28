@@ -8,13 +8,20 @@ ini_set('display_errors', cfg('debug') ? '1' : '0');
 error_reporting(E_ALL);
 
 $sn = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/'));
+if ($sn === '/api' || substr($sn, -4) === '/api') {
+    $sn = substr($sn, 0, -4);
+}
+if ($sn === '.' || $sn === '/') {
+    $sn = '';
+}
 define('BASE', rtrim($sn, '/'));
 
 foreach (['helpers', 'DB', 'Auth', 'Mailer', 'Pdf', 'Xlsx'] as $f) require ROOT . "/app/core/$f.php";
 foreach (['Customer', 'Membership', 'Payment', 'Attendance', 'Report'] as $m) require ROOT . "/app/models/$m.php";
 
 set_exception_handler(function (Throwable $e) {
-    @file_put_contents(ROOT . '/storage/error.log',
+    $logDir = is_writable(ROOT . '/storage') ? (ROOT . '/storage') : sys_get_temp_dir();
+    @file_put_contents(rtrim($logDir, '/\\') . '/error.log',
         date('c') . ' ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine() . "\n", FILE_APPEND);
     http_response_code(500);
     if (($_GET['page'] ?? '') === 'api') {
@@ -27,9 +34,13 @@ set_exception_handler(function (Throwable $e) {
     exit;
 });
 
+if (!is_writable(session_save_path() ?: '/nonexistent')) {
+    session_save_path(sys_get_temp_dir());
+}
 session_name('CAATOSESS');
+$isHttps = !empty($_SERVER['HTTPS']) || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
 session_set_cookie_params([
     'lifetime' => 0, 'path' => '/', 'httponly' => true,
-    'samesite' => 'Lax', 'secure' => !empty($_SERVER['HTTPS']),
+    'samesite' => 'Lax', 'secure' => $isHttps,
 ]);
 session_start();

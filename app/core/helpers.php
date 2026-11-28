@@ -9,12 +9,32 @@ function req(string $k, $d = '') { $v = $_POST[$k] ?? $_GET[$k] ?? $d; return is
 function json_out(array $a, int $code = 200): void { http_response_code($code); header('Content-Type: application/json'); echo json_encode($a); exit; }
 
 function jsattr($v): string { return htmlspecialchars(json_encode($v), ENT_QUOTES, 'UTF-8'); }
-function csrf_token(): string { if (empty($_SESSION['csrf'])) $_SESSION['csrf'] = bin2hex(random_bytes(32)); return $_SESSION['csrf']; }
+function csrf_token(): string
+{
+    if (empty($_SESSION['csrf'])) {
+        if (!empty($_COOKIE['CAATOCSRF']) && preg_match('/^[a-f0-9]{64}$/', (string) $_COOKIE['CAATOCSRF'])) {
+            $_SESSION['csrf'] = $_COOKIE['CAATOCSRF'];
+        } else {
+            $_SESSION['csrf'] = bin2hex(random_bytes(32));
+        }
+    }
+    if (!headers_sent() && ($_COOKIE['CAATOCSRF'] ?? '') !== $_SESSION['csrf']) {
+        $isHttps = !empty($_SERVER['HTTPS']) || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+        setcookie('CAATOCSRF', $_SESSION['csrf'], [
+            'expires' => 0, 'path' => '/', 'httponly' => true,
+            'samesite' => 'Lax', 'secure' => $isHttps,
+        ]);
+    }
+    return $_SESSION['csrf'];
+}
 function csrf_field(): string { return '<input type="hidden" name="_csrf" value="' . csrf_token() . '">'; }
 function csrf_check(): void
 {
     $t = $_POST['_csrf'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
-    if (!hash_equals(csrf_token(), (string) $t)) {
+    $expected = csrf_token();
+    $cookieTok = $_COOKIE['CAATOCSRF'] ?? '';
+    $valid = hash_equals($expected, (string) $t) || ($cookieTok !== '' && hash_equals((string) $cookieTok, (string) $t));
+    if (!$valid) {
         if (($_GET['page'] ?? '') === 'api') json_out(['ok' => false, 'message' => 'Security token expired. Refresh the page.'], 419);
         http_response_code(419);
         exit('Security token expired. Please go back, refresh the page and try again.');
@@ -30,7 +50,14 @@ function setting(string $k, string $d = ''): string
     }
     return $c[$k] ?? $d;
 }
-function set_setting(string $k, string $v): void { DB::q('REPLACE INTO settings (skey, svalue) VALUES (?,?)', [$k, $v]); }
+function set_setting(string $k, string $v): void
+{
+    if (DB::isSqlite()) {
+        DB::q('INSERT OR REPLACE INTO settings (skey, svalue) VALUES (?,?)', [$k, $v]);
+    } else {
+        DB::q('REPLACE INTO settings (skey, svalue) VALUES (?,?)', [$k, $v]);
+    }
+}
 
 function money($v): string { return setting('currency', '$') . number_format((float) $v, 2); }
 function fmt_date($d): string { return $d ? date('d M Y', strtotime($d)) : '—'; }
@@ -188,11 +215,24 @@ function save_photo(array $f): ?string
     $mime = (new finfo(FILEINFO_MIME_TYPE))->file($f['tmp_name']);
     $ext = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'][$mime] ?? null;
     if (!$ext || !@getimagesize($f['tmp_name'])) throw new RuntimeException('Photo must be a JPG, PNG or WEBP image.');
+    $dir = ROOT . '/uploads/profiles';
+    if (!is_writable($dir)) {
+        $bytes = @file_get_contents($f['tmp_name']);
+        if ($bytes !== false && strlen($bytes) <= 250 * 1024) {
+            return 'data:' . $mime . ';base64,' . base64_encode($bytes);
+        }
+        return null;
+    }
     $name = bin2hex(random_bytes(12)) . '.' . $ext;
-    if (!move_uploaded_file($f['tmp_name'], ROOT . '/uploads/profiles/' . $name)) throw new RuntimeException('Could not save the photo.');
+    if (!move_uploaded_file($f['tmp_name'], $dir . '/' . $name)) throw new RuntimeException('Could not save the photo.');
     return $name;
 }
-function photo_url(?string $p): string { return $p ? BASE . '/uploads/profiles/' . $p : asset('img/avatar.svg'); }
+function photo_url(?string $p): string
+{
+    if (!$p) return asset('img/avatar.svg');
+    if (strpos($p, 'data:image/') === 0 || strpos($p, 'http') === 0) return $p;
+    return BASE . '/uploads/profiles/' . $p;
+}
 
 /** Saves a base64 data-URI photo (from webcam canvas). Returns filename or null. */
 function save_photo_base64(string $data): ?string
@@ -206,8 +246,12 @@ function save_photo_base64(string $data): ?string
     $bytes = base64_decode($m[2], true);
     if ($bytes === false || strlen($bytes) < 100) throw new RuntimeException('Camera photo is empty or corrupt.');
     if (strlen($bytes) > 4 * 1024 * 1024) throw new RuntimeException('Camera photo must be smaller than 4 MB.');
+    $dir = ROOT . '/uploads/profiles';
+    if (!is_writable($dir)) {
+        return strlen($data) <= 350000 ? $data : null;
+    }
     $name = bin2hex(random_bytes(12)) . '.' . $ext;
-    $path = ROOT . '/uploads/profiles/' . $name;
+    $path = $dir . '/' . $name;
     if (file_put_contents($path, $bytes) === false) throw new RuntimeException('Could not save the camera photo.');
     return $name;
 }
